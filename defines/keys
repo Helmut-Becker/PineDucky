@@ -1,0 +1,135 @@
+#Key | = | Modifier | = | Sequence
+a 0x400
+b 0x500
+c 0x600
+d 0x700
+e 0x800
+f 0x900
+g 0xa00
+h 0xb00
+i 0xc00
+j 0xd00
+k 0xe00
+l 0xf00
+m 0x1000
+n 0x1100
+o 0x1200
+p 0x1300
+q 0x1400
+r 0x1500
+s 0x1600
+t 0x1700
+u 0x1800
+v 0x1900
+w 0x1a00
+x 0x1b00
+y 0x1c00
+z 0x1d00
+1 0x1e00
+2 0x1f00
+3 0x2000
+4 0x2100
+5 0x2200
+6 0x2300
+7 0x2400
+8 0x2500
+9 0x2600
+0 0x2700
+
+#*****MODIFIERS*****#
+STRG 1
+SHITF 2
+ALT 4
+WIN 8
+ALTGR 40
+
+
+
+# This way i can coose the macros for the different OS's
+ #define USER_JACK 1
+ #define USER_QUEEN 2
+
+ #define USER USER_JACK
+
+ #if USER == USER_JACK
+ #define USER_VS USER_QUEEN
+ #elif USER == USER_QUEEN
+ #define USER_VS USER_JACK
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+a=\x00=\x04
+b=\x00=\x05
+c=\x00=\x06
+d=\x00=\x07
+e=\x00=\x08
+f=\x00=\x09
+g=\x00=\x0A
+h=\x00=\x0B
+i=\x00=\x0C
+j=\x00=\x0D
+k=\x00=\x0E
+l=\x00=\x0F
+m=\x00=\x10
+n=\x00=\x11
+o=\x00=\x12
+p=\x00=\x13
+q=\x00=\x14
+r=\x00=\x15
+s=\x00=\x16
+t=\x00=\x17
+u=\x00=\x18
+v=\x00=\x19
+w=\x00=\x1A
+x=\x00=\x1B
+y=\x00=\x1D
+z=\x00=\x1C
+1=\x00=\x1E
+2=\x00=\x1F
+3=\x00=\x20
+4=\x00=\x21
+5=\x00=\x22
+6=\x00=\x23
+7=\x00=\x24
+8=\x00=\x25
+9=\x00=\x26
+0=\x00=\x27
+!=\x20=\x1E
+ =\x00=\x2C
+-=\x00=\x38
++=\x00=\x30
+.=\x00=\x37
+/=\x20=\x24
+_=\x20=\x38
+&=\x20=\x23
+>=\x20=\x64
+<=\x00=\x64
+#=\x00=\x31
+"=\x20=\x1F
+@=\x40=\x14
+(=\x20=\x25
+)=\x20=\x26
+'=\x20=\x31
+;=\x20=\x36
+:=\x20=\x37
+?=\x20=\x2D
+$=\x20=\x21
+*=\x20=\x30
+[=\x40=\x25
+]=\x40=\x26
+|=\x40=\x64
+~=\x40=\x30
+%=\x20=\x22
+\=\x40=\x2D
+*/
