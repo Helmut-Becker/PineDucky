@@ -4,6 +4,39 @@
 #include <stdint.h>
 #include <inttypes.h>
 
+/*
+*  Struct Key
+*
+*  Holds information about a Key
+*
+*  @var keyword_length = length of the keyword the @struct Keys
+*    will be searched upon
+*  @var keyword = Holds keyword as STRING so I can do strcmp
+*  @var value = Holds two u_int8_t shifted into one u_int16_t
+*    - First 8 bits (read from right to left) = Modifier
+*    - Second 8 bits (read from right to left) = Key value
+*
+*/
+typedef struct Key{
+  u_int8_t keyword_length;
+  char * keyword;
+  u_int16_t value;
+}Key;
+
+/*
+ *  Struct Keys
+ *
+ *  Holds a number of @struct Key
+ *
+ *  @var quantity = Holds the number of entries in @var keys
+ *  @var keys = Holds pointers to @struct Key
+ *
+ */
+typedef struct Keys{
+  u_int16_t quantity;
+  Key * keys;
+}Keys;
+
 
 /*
  *  Struct Sequence
@@ -45,6 +78,7 @@ typedef struct SplitLine{
  *
  *  @var quantity = Holds number of entries in sequences
  *  @var sequences = Holds Bytesequences
+ *
  */
 typedef struct Script{
   u_int8_t quantity;
