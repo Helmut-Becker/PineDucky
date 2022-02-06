@@ -4,6 +4,27 @@
 #include <stdint.h>
 #include <inttypes.h>
 
+
+typedef struct Keyword{
+  u_int8_t keyword_length;
+  char * keyword;
+}Keyword;
+
+/*
+ *  Struct Keywords
+ *
+ *  Holds Keywords like DELAY, STRING, etc...
+ *
+ *  @var keyword_length = length of @var keyword
+ *  @var entries = Holds keyword as STRING so I can do strcmp
+ *
+ */
+typedef struct Keywords{
+  u_int8_t quantity;
+  Keyword * entries;
+}Keywords;
+
+
 /*
 *  Struct Key
 *
@@ -29,12 +50,12 @@ typedef struct Key{
  *  Holds a number of @struct Key
  *
  *  @var quantity = Holds the number of entries in @var keys
- *  @var keys = Holds pointers to @struct Key
+ *  @var entries = Holds pointers to @struct Key
  *
  */
 typedef struct Keys{
   u_int16_t quantity;
-  Key * keys;
+  Key * entries;
 }Keys;
 
 
