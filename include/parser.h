@@ -109,7 +109,17 @@ static void printSplitLine(SplitLine * sl){
   }
 }
 
-
+/*
+ *  Function insertIntoDictionary
+ *
+ *  Creates and inserts a new Entry at the end of @param _dictionary
+ *
+ *  @param _dictionary = Pointer to Dictionary into which shall be inserted
+ *  @param keyword_length = Length of @param keyword
+ *  @param value = Char array in wich the hex value of keystroke is stored
+ *  @param type = Enum Type to identify Entry
+ *
+ */
 static void insertIntoDictionary(Dictionary * _dictionary,
                                   u_int8_t keyword_length,
                                   char * keyword,
