@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 typedef enum Type{Key, Modifier, Keyword, Custom}Type;
 
@@ -42,7 +42,6 @@ typedef struct Dictionary{
   Entry * entries;
 }Dictionary;
 
-
 /*
  *  Struct Sequence
  *
@@ -56,7 +55,6 @@ typedef struct Sequence{
   u_int8_t modifier;
   u_int8_t sequence[6];
 }Sequence;
-
 
 /*
  *  Struct SplitLine
@@ -75,7 +73,6 @@ typedef struct SplitLine{
   char ** slices;
 }SplitLine;
 
-
 /*
  *  Struct Script
  *
@@ -89,7 +86,6 @@ typedef struct Script{
   u_int8_t quantity;
   char ** sequences;
 }Script;
-
 
 /*
  *  Function printSplitLine
@@ -129,16 +125,16 @@ static void insertIntoDictionary(Dictionary * _dictionary,
 {
   // Make space for another entry
   if(DEBUG) printf("%s\n", "Allocating memory for new entry");
-  _dictionary->entries = realloc(_dictionary->entries, sizeof(Entry) * (_dictionary->quantity+1));
+  _dictionary->entries = (Entry *)realloc(_dictionary->entries, sizeof(Entry) * (_dictionary->quantity+1));
   if(DEBUG) printf("\t%s: %d\n", "Keyword_length", keyword_length);
-  _dictionary->entries[_dictionary->quantity].keyword = malloc(keyword_length);
+  _dictionary->entries[_dictionary->quantity].keyword = malloc(keyword_length+1); // +1 for the '\0'
   _dictionary->entries[_dictionary->quantity].keyword_length = keyword_length;
   strcpy(_dictionary->entries[_dictionary->quantity].keyword, keyword);
   _dictionary->entries[_dictionary->quantity].value = (u_int16_t) strtol(value, NULL, 16);
   _dictionary->entries[_dictionary->quantity].type = type;
   if(DEBUG) printf("\t%s: %p\n", "Adress of Entry", &_dictionary->entries[_dictionary->quantity]);
   if(DEBUG) printf("\t%s: %p\n", "Adress of Entry.keyword", _dictionary->entries[_dictionary->quantity].keyword);
-  if(DEBUG) printf("\t%s: %d\n", "Entry.keyword_length", _dictionary->entries[_dictionary->quantity].keyword_length);
+  if(DEBUG) printf("\t%s: %d\n", "Allocated Bytes", keyword_length+1);
   if(DEBUG) printf("\t%s: %d\n", "Entry.type", _dictionary->entries[_dictionary->quantity].type);
   if(DEBUG) printf("\t%s: %d\n", "Entry.keyword_length", _dictionary->entries[_dictionary->quantity].keyword_length);
   if(DEBUG) printf("\t%s: %s\n", "Keyword", _dictionary->entries[_dictionary->quantity].keyword);
@@ -161,38 +157,45 @@ static void insertIntoDictionary(Dictionary * _dictionary,
 static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
   //number of entries in the first pointer
   SplitLine * result;
-  result = malloc(sizeof(SplitLine));
+  // printf("%s: %d %s: %d\n", "Sizeof SplitLine", sizeof(SplitLine), "Sizeof Splitline* ", sizeof(SplitLine *));
+  result = (SplitLine *)calloc(1, sizeof(struct SplitLine));
   result->quantity = 0;
-  result->length = (u_int8_t *)malloc(sizeof(u_int8_t *));
-  result->slices = (char **)malloc(sizeof(char *));
-  char * tmp; tmp = malloc(200);
-
+  result->length = malloc(sizeof(u_int8_t));
+  result->slices = malloc(sizeof(char *)*3); // If I change this to 3 = errors häää
+  char * tmp; tmp = malloc(200 * sizeof(char));
+  //
+  // result->slices   p--->   char *  p---> char *
+  //
+  //
   u_int16_t offset = 0;
   for(int i = 0; i < len; i++){
     if(line[i] == delim || i == len-1){
-      result->length = realloc(result->length, (result->quantity)+1);
+      result->length = (u_int8_t *)realloc(result->length, (result->quantity)+1);
       if(DEBUG) printf("result address: %p\n", result);
       if(DEBUG) printf("result->quantity address: %p\n", &result->quantity);
       if(DEBUG) printf("result->slices address: %p\n", result->slices);
       if(DEBUG) printf("result->quantity value: %d\n", result->quantity);
       if(DEBUG) printf("offset value: %d\n", i-offset);
-      result->slices[result->quantity] = malloc(i-offset);
-      if(DEBUG) printf("result->slices[result->quantity] address: %p\n", result->slices[result->quantity]);
-      result->slices[result->quantity][0] = 'c';
-      if(DEBUG) printf("result->slices[result->quantity][0] value: %c\n", result->slices[result->quantity][0]);
+      result->slices[result->quantity] = malloc(i-offset+1 * sizeof(char)); // +1 because of the '\0' following
+      if(DEBUG) printf("result->slices[result->quantity] malloced size: %d\n", i-offset+1);
+
+      if(DEBUG) printf("result->slices[result->quantity] address: %p\n", &result->slices[result->quantity]);
       int j = 0;
       while (j < i-offset){
-        if(DEBUG) printf("insert: %c at ", tmp[j]);
-        if(DEBUG) printf("j: %d\n", j);
+        // if(DEBUG) printf("insert: %c at ", tmp[j]);
+        // if(DEBUG) printf("j: %d\n", j);
         result->slices[result->quantity][j] = tmp[j];
         j++;
       }
-      result->slices[result->quantity][++j] = '\0';
+      if(DEBUG) printf("insert: %s at ", "\\0");
+      if(DEBUG) printf("j: %d\n", j);
+      result->slices[result->quantity][j] = '\0';
       if(DEBUG) printf("%s: %d\n", "Done with inserting i",i);
       offset = (u_int16_t)i+1;
       result->length[result->quantity] = j;
       if(DEBUG) printf("%s %d %s%d%s\n", "inserting", j, "into result->length[", result->quantity, "]");
-      tmp = malloc(200);
+      free(tmp);
+      tmp = malloc(200  * sizeof(char));
       result->quantity += 1;
       if(DEBUG) printf("%s\n", "----------------------------------------------------------");
     }else{
@@ -203,37 +206,6 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
   }
   free(tmp);
   return result;
-}
-
-/*
- *  Function setupKeysAndKewords
- *
- *  Reads file defines/keys. Fills @var _dictionary with keys and Keywords
- *
- *  @param _dictionary = Dictionary inserted into
- *
-*/
-static void setupKeysAndKewords(Dictionary * _dictionary){
-
-  FILE * fp; fp = openFile("defines/keys");
-  char * line = NULL;
-  size_t len = 0;
-  ssize_t read;
-  u_int8_t pos;
-
-  while ((read = getline(&line, &len, fp)) != -1) {
-    if(line[0] == '#') continue;
-    SplitLine * _sl; _sl = splitLine(line, read, ' ');
-    if (line[0] == '*'){
-      if(strcmp(_sl->slices[1], "KEYS") == 0) pos = 0;
-      else if(strcmp(_sl->slices[1], "MODIFIERS") == 0) pos = 1;
-      else if(strcmp(_sl->slices[1], "KEYWORDS") == 0) pos = 2;
-      else if(strcmp(_sl->slices[1], "CUSTOM") == 0) pos = 3;
-    }else{
-      insertIntoDictionary(_dictionary, _sl->length[0], _sl->slices[0], _sl->slices[1], pos);
-    }
-  }
-  closeFile(fp, line);
 }
 
 /*
@@ -262,9 +234,19 @@ static void closeFile(FILE * fp, char * line){
   fclose(fp);
   if (line)
       free(line);
-  exit(EXIT_SUCCESS);
 }
 
+static void freeSplitLine(SplitLine * _sl){
+  for (size_t i = 0; i < _sl->quantity; i++) {
+    if(_sl->slices[i]){
+      // printf("slice %p gets freed\n", _sl->slices[i]);
+      free(_sl->slices[i]);
+    }
+  }
+  if(_sl->slices) free(_sl->slices);
+  if(_sl->length) free(_sl->length);
+  if(_sl) free(_sl);
+}
 
 
 
