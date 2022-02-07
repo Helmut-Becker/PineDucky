@@ -148,6 +148,93 @@ static void insertIntoDictionary(Dictionary * _dictionary,
   if(DEBUG) printf("%s\n\n", "Done");
 }
 
+/*
+ *  Function splitLine
+ *
+ *  Splits line into smaller pieces by delimiter
+ *
+ *  @return struct SplitLine see headerfile for more information
+ *  @var tmp = Holds temporary sequence of chars, before
+ *    they get inserted into struct @var result
+ *
+ */
+static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
+  //number of entries in the first pointer
+  SplitLine * result;
+  result = malloc(sizeof(SplitLine));
+  result->quantity = 0;
+  result->length = (u_int8_t *)malloc(sizeof(u_int8_t *));
+  result->slices = (char **)malloc(sizeof(char *));
+  char * tmp; tmp = malloc(200);
+
+  u_int16_t offset = 0;
+  for(int i = 0; i < len; i++){
+    if(line[i] == delim || i == len-1){
+      result->length = realloc(result->length, (result->quantity)+1);
+      if(DEBUG) printf("result address: %p\n", result);
+      if(DEBUG) printf("result->quantity address: %p\n", &result->quantity);
+      if(DEBUG) printf("result->slices address: %p\n", result->slices);
+      if(DEBUG) printf("result->quantity value: %d\n", result->quantity);
+      if(DEBUG) printf("offset value: %d\n", i-offset);
+      result->slices[result->quantity] = malloc(i-offset);
+      if(DEBUG) printf("result->slices[result->quantity] address: %p\n", result->slices[result->quantity]);
+      result->slices[result->quantity][0] = 'c';
+      if(DEBUG) printf("result->slices[result->quantity][0] value: %c\n", result->slices[result->quantity][0]);
+      int j = 0;
+      while (j < i-offset){
+        if(DEBUG) printf("insert: %c at ", tmp[j]);
+        if(DEBUG) printf("j: %d\n", j);
+        result->slices[result->quantity][j] = tmp[j];
+        j++;
+      }
+      result->slices[result->quantity][++j] = '\0';
+      if(DEBUG) printf("%s: %d\n", "Done with inserting i",i);
+      offset = (u_int16_t)i+1;
+      result->length[result->quantity] = j;
+      if(DEBUG) printf("%s %d %s%d%s\n", "inserting", j, "into result->length[", result->quantity, "]");
+      tmp = malloc(200);
+      result->quantity += 1;
+      if(DEBUG) printf("%s\n", "----------------------------------------------------------");
+    }else{
+      if(DEBUG) printf("| %c |", line[i]);
+      if(DEBUG) printf("%s%d%s\n", "tmp[", i-offset, "]");
+      tmp[i-offset] = line[i];
+    }
+  }
+  free(tmp);
+  return result;
+}
+
+/*
+ *  Function setupKeysAndKewords
+ *
+ *  Reads file defines/keys. Fills @var _dictionary with keys and Keywords
+ *
+ *  @param _dictionary = Dictionary inserted into
+ *
+*/
+static void setupKeysAndKewords(Dictionary * _dictionary){
+
+  FILE * fp; fp = openFile("defines/keys");
+  char * line = NULL;
+  size_t len = 0;
+  ssize_t read;
+  u_int8_t pos;
+
+  while ((read = getline(&line, &len, fp)) != -1) {
+    if(line[0] == '#') continue;
+    SplitLine * _sl; _sl = splitLine(line, read, ' ');
+    if (line[0] == '*'){
+      if(strcmp(_sl->slices[1], "KEYS") == 0) pos = 0;
+      else if(strcmp(_sl->slices[1], "MODIFIERS") == 0) pos = 1;
+      else if(strcmp(_sl->slices[1], "KEYWORDS") == 0) pos = 2;
+      else if(strcmp(_sl->slices[1], "CUSTOM") == 0) pos = 3;
+    }else{
+      insertIntoDictionary(_dictionary, _sl->length[0], _sl->slices[0], _sl->slices[1], pos);
+    }
+  }
+  closeFile(fp, line);
+}
 
 /*
  *  Function openFile
