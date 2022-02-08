@@ -43,20 +43,6 @@ typedef struct Dictionary{
 }Dictionary;
 
 /*
- *  Struct Sequence
- *
- *  @var modifier = Holds the modifier this line will be send with
- *    i.e SHIFT or ALT in hex
- *  @var sequence = Holds the sequence of keystrokes that will be send
- *    with this line
- *
- */
-typedef struct Sequence{
-  u_int8_t modifier;
-  u_int8_t sequence[6];
-}Sequence;
-
-/*
 *  Struct Script
 *
 *  Struct to hold Bytesequences of 8 bytes each
@@ -86,7 +72,6 @@ typedef struct SplitLine{
   u_int8_t * length;
   char ** slices;
 }SplitLine;
-
 
 /*
  *  Function printSplitLine
@@ -237,6 +222,12 @@ static void closeFile(FILE * fp, char * line){
       free(line);
 }
 
+/*
+ *  Function freeSplitLine
+ *
+ *  Well, frees struct @param _sl
+ *
+ */
 static void freeSplitLine(SplitLine * _sl){
   for (size_t i = 0; i < _sl->quantity; i++) {
     if(_sl->slices[i]){
@@ -249,14 +240,12 @@ static void freeSplitLine(SplitLine * _sl){
   if(_sl) free(_sl);
 }
 
-// static u_int8_t * copy_uint8_Array(u_int8_t * dest, u_int8_t * src, u_int16_t len){
-//   u_int8_t * p; p = malloc(sizeof(u_int8_t) * len);
-//   for (size_t i = 0; i < len; i++) {
-//     dest[i] = src[i];
-//   }
-//   return p;
-// }
-
+/*
+ *  Function strrev
+ *
+ *  Reverses a given str and @return returns it
+ *
+ */
 static char * strrev(char * str){
       char *p1, *p2;
 
@@ -271,8 +260,14 @@ static char * strrev(char * str){
       return str;
 }
 
-static char * printIntToBinary(int n){
-  char p[9]; int pos = 0;
+/*
+ *  Function printIntToBinary
+ *
+ *  @return char * with @param in binary
+ *
+ */
+static char * printIntToBinary(char * p, u_int8_t n){
+  int pos = 0;
   do{
     if(n % 2 == 0) p[pos++] = '0';
     else p[pos++] = '1';
@@ -283,24 +278,204 @@ static char * printIntToBinary(int n){
   return strrev(p);
 }
 
-static u_int8_t * insertIntoSequence(u_int8_t mask, u_int8_t * tmp_sequence, char * value){
-  printf("%s: %s\n", "Mask", printIntToBinary(mask));
-  printf("\n%s: \n", "Sequence");
+/*
+ *  Function inSequence
+ *
+ *  Checks if @param key is in @param sequence
+ *
+ */
+static u_int8_t inSequence(u_int8_t key, u_int8_t * sequence){
   for (size_t i = 0; i < 8; i++) {
-    printf("%c ", tmp_sequence[i]);
+    if(key == sequence[i]) return 1;
   }
-  printf("\nValue: %s\n", value);
-  return tmp_sequence;
-  // need to take value apart
-  // return the sequence, because if this function has to make a new sequence, because it is full or the same letter got inserted, the new sequence can be returned
-  // checking if its full
-  // checking if the same value was inserted before, if jes make a new sequence and
- //look out for netx spot in mask and then write a 1 in this spot, if key value was not 0x00. In this case it was a modifier
+  return 0;
 }
-//
-// static void insertIntoScript(){
-//
-// }
+
+/*
+ *  Function printSequences
+ *
+ *  Prints sequences from @param _sc one by one
+ *
+ */
+static void printSequences(Script * _sc){
+  printf("\n%s\n", "All Sequences:");
+  for (size_t i = 0; i < _sc->quantity; i++) {
+    printf("\t%s: %d\n\t\t", "Sequence", i);
+    for (size_t j = 0; j < 8; j++) {
+      printf("%x", _sc->sequences[i][j]);
+    }
+    printf("\n");
+  }
+}
+
+/*
+ *  Function searchDictionary
+ *
+ *  Searches @param _dc if @param str is present
+ *  @return corrispondig ByteValue if found
+ *
+ */
+static u_int16_t searchDictionary(Dictionary * _dc, char * str){
+  for (size_t i = 0; i < _dc->quantity; i++) {
+    if(strcmp(str, _dc->entries[i].keyword) == 0) return _dc->entries[i].value;
+  }
+  printf("KEY %d NOT FOUND IN DICTIONARY!!!");
+}
+
+/*
+ *  Function charToString
+ *
+ *  Adds '\0' to @param and @return @param as string
+ *
+ */
+static char * charToString(char * value){
+  char * p; p = calloc(2, sizeof(char));
+  p[0] = value[0]; p[1] = '\0';
+  return p;
+}
+
+/*
+ *  Function insertIntoScript
+ *
+ *  Inserts @param sequence into @param _sc (COPYING)
+ *  Resets @param mask to default
+ *  Renews @param sequence
+ *
+ */
+static void insertIntoScript(Script * _sc, u_int8_t ** sequence, u_int8_t * mask){
+  // Make space for another entry
+  _sc->sequences = realloc(_sc->sequences, sizeof(char *) * _sc->quantity+1);
+  _sc->sequences[_sc->quantity] = malloc(sizeof(char) * 8);
+
+  for (size_t i = 0; i < 8; i++){
+    _sc->sequences[_sc->quantity][i] = (*sequence)[i];
+  }
+  _sc->quantity += 1;
+
+  // Resetting sequence
+  *sequence = calloc(8, sizeof(u_int8_t));
+  // Reset mask
+  *mask = 0b01000000;
+}
+
+/*
+ *  Function nextFreeSpot
+ *
+ *  @return position of next 0 bit in @param mask
+ *  Note: read from left to right
+ *
+ */
+static u_int8_t nextFreeSpot(char * mask){
+  for (size_t i = 2; i < 8; i++) {
+    if(mask[i] == '0') return i;
+  }
+  // Not returning in the for loop above should not happen,
+  // because it is checked before, if sequence is full
+}
+
+/*
+ *  Function modifyBit
+ *
+ *  Sets bit in @param mask to @param value at @param p position
+ *
+ */
+static void modifyBit(u_int8_t * mask, u_int8_t p, u_int8_t value){
+  p = 8 - p - 1;
+  u_int8_t _m = 1 << p;
+  char q[9];
+  if(DEBUG) printf("%s:\n", "Applying mask");
+  if(DEBUG) printf("  %s\n", printIntToBinary(q, *mask));
+  if(DEBUG) printf("  %s\n", printIntToBinary(q, _m));
+  if(DEBUG) printf("  %s\n", "--------");
+  *mask = ((*mask & ~_m) | (value << p));
+  if(DEBUG) printf("= %s\n", printIntToBinary(q, *mask));
+
+}
+
+/*
+ *  Function sequenceIsEmpty
+ *
+ *  Checks if sequence[2] till sequence[8] is equal to 0 or not
+ *  @return = returns 1 if sequence is empty
+ *
+ */
+static u_int8_t sequenceIsEmpty(u_int8_t ** tmp_sequence){
+  for (size_t i = 2; i < 8; i++) {
+    if((*tmp_sequence)[i] == 1) return 0;
+  }
+  return 1;
+}
+
+/*
+ *  Function insertIntoSequence
+ *
+ *  Does various checks and then
+ *    inserts @var keyValue into @param tmp_sequence
+ *
+ */
+static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, u_int8_t ** tmp_sequence, char * value){
+  if(DEBUG) printf("\n-------------------------------------------\n");
+  char * maskInBin = calloc(9, sizeof(char));
+  printIntToBinary(maskInBin, *mask);
+
+  if(DEBUG) printf("%s: \n\t%s\n", "Mask before", maskInBin);
+  if(DEBUG) printf("Address of tmp_sequence: %p\n", *tmp_sequence);
+  if(DEBUG) printf("%s: \n\t", "Sequence");
+  for (size_t i = 0; i < 8; i++) {
+    if(DEBUG) printf("%x ", (*tmp_sequence)[i]);
+  }
+  if(DEBUG) printf("\nValue:\n\t%c\n\n", *value);
+
+  // Search corrispondig bytesequence for value in dictionary
+  u_int16_t seq = searchDictionary(_dc, charToString(value));
+  u_int8_t modifier = seq & 0x00FF;
+  u_int8_t keyValue = seq >> 8;
+  if(DEBUG) printf("Key value is: %x\n", keyValue);
+  if(DEBUG) printf("Modifier is: %x\n", modifier);
+
+  // Checking if tmp_sequence is full, if yes, send and start inserting into new sequence
+  if(*mask > 0b01111110) {
+    insertIntoScript(_sc, tmp_sequence, mask);
+    if(DEBUG) printf("FULL\n");
+  }
+
+  // Checking if the current value is already present in tmp_sequence, if yes send Sequence and insert current value into new one
+  if(inSequence(keyValue, (*tmp_sequence))){
+    insertIntoScript(_sc, tmp_sequence, mask);
+    if(DEBUG) printf("Value was already present\n");
+  }
+
+  // checking if sequence is empty, then its okay to add another modifier, but if its already filled with a key, then its not okay to add another modifier
+  if(!sequenceIsEmpty(tmp_sequence) && modifier != 0){
+    insertIntoScript(_sc, tmp_sequence, mask);
+    if(DEBUG) printf("MODIFIER WAS NOT 0 so sending");
+  }
+
+  // check if sequence is empty, if empty then multiple modifiers are okay. But if one Modifier is inserted and then a key and then another modifier, that not okay, it has to be returned before and inserted into a new sequence
+  /*
+   *  Adding two modifiers with bitwise OR '|'
+   *
+   *  Note: Currently not tested...
+   *
+   *  SHIFT = 00000010
+   *  ALT   = 00000001
+   *          --------
+   *        = 00000011
+   *
+   */
+  (*tmp_sequence)[0] = (*tmp_sequence)[0] | modifier;
+
+  printIntToBinary(maskInBin, *mask);
+  u_int8_t free = nextFreeSpot(maskInBin);
+  if(DEBUG) printf("Inserting into: tmp_sequence[%d]\n", free);
+
+  (*tmp_sequence)[free] = keyValue;
+
+  //Set bit at position @var free to 1
+  modifyBit(mask, free, 1);
+
+  if(DEBUG) printf("\n-------------------------------------------\n");
+}
 
 
 

@@ -1,40 +1,88 @@
 #include "parser.h"
 
 Dictionary * _dictionary;
+Script * _script;
 
+/*
+ *  Function allocate
+ *
+ *  Allocating memory for @global _dictionary
+ *    and @global _script
+ *
+ */
 void allocate(){
   _dictionary = malloc(sizeof(Dictionary));
   _dictionary->quantity = 0;
   if(DEBUG) printf("%s\n", "Allocating Memory for Dictionary.");
   if(DEBUG) printf("\t%s %p\n", "Dictionary address: ", _dictionary);
   if(DEBUG) printf("\t%s %d\n", "Dictionary->quantity =");
+
+  _script = malloc(sizeof(Script));
+  _script->quantity = 0;
+  _script->sequences = malloc(sizeof(char *));
+  if(DEBUG) printf("\n%s\n", "Allocating Memory for Script.");
+  if(DEBUG) printf("\t%s %p\n", "Script address: ", _script);
+  if(DEBUG) printf("\t%s %d\n", "Script->quantity =");
 }
 
+/*
+ *  Function evalString
+ *
+ *  Called if keyword 'STRING' is evalueated in @FILE script
+ *  Calling @function insertIntoSequence to insert everyting
+ *    in @param _sl into @global _script
+ *
+ */
+void evalString(SplitLine * _sl){
 
+  u_int8_t ** tmp_sequence; tmp_sequence = malloc(sizeof(u_int8_t *));
+  *tmp_sequence = calloc(8, sizeof(u_int8_t));
+  u_int8_t * tmp_mask; tmp_mask = calloc(1, sizeof(u_int8_t));
+  *tmp_mask = 0b01000000;
 
-// static Script *
-
-void evaluateSplitLine(SplitLine * _sl){
-
-  for (int i = 0; i < _sl->quantity; i++){
-    // Key, Modifier, Keyword, Custom
-    printf("_sl->slices[i]: %s\n", _sl->slices[i]);
-    for (size_t j = 0; j < _dictionary->quantity; j++) {
-      printf("_dictionary->entries[j].keyword: %s\n", _dictionary->entries[j].keyword);
-      if (strcmp(_sl->slices[i], _dictionary->entries[j].keyword) == 0) printf("%s", _dictionary->entries[j].keyword);
+  for (size_t i = 1; i < _sl->quantity; i++) {
+    for (size_t j = 0; j < _sl->length[i]; j++) {
+      insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence, &_sl->slices[i][j]);
     }
   }
-  // KEY OR Keyword
-
-
-  // See if Key
-  // See if modifier
-  // see if Keyword
-  // see if delay
-  // See if it is a Keyword if yes call evalKeyword
-  // if not
 }
 
+/*
+ *  Function evalKeyword
+ *
+ *  Evaluates Keyword (will later expand this
+ *    with 'DELAY' and 'DEFAULT_DELAY')
+ *
+ */
+void evalKeyword(SplitLine * _sl){
+  for (size_t i = 0; i < _sl->quantity; i++) {
+    if(strcmp(_sl->slices[0], "STRING") == 0) evalString(_sl); return;
+  }
+}
+
+/*
+ *  Function evaluateSplitLine
+ *
+ *  Evaluates each @var _sl->slices and calls
+ *    functions accordingly
+ *
+ *
+ */
+void evaluateSplitLine(SplitLine * _sl){
+
+  if(strcmp(_sl->slices[0], "REM") == 0) return; // Check for comment
+  for (int i = 0; i < _sl->quantity; i++){
+    // Key, Modifier, Keyword, Custom
+    for (size_t j = 0; j < _dictionary->quantity; j++) {
+      if (strcmp(_sl->slices[i], _dictionary->entries[j].keyword) == 0){
+        if(_dictionary->entries[j].type == Key) printf("FOUND KEY\n");
+        if(_dictionary->entries[j].type == Modifier) printf("FOUND MODIFIER\n");
+        if(_dictionary->entries[j].type == Keyword) evalKeyword(_sl); printf("FOUND KEYWORD\n");
+        if(_dictionary->entries[j].type == Custom) printf("FOUND CUSTOM\n");
+      }
+    }
+  }
+}
 
 /*
  *  Function setupKeysAndKewords
@@ -43,7 +91,7 @@ void evaluateSplitLine(SplitLine * _sl){
  *
  *  @param _dictionary = Dictionary inserted into
  *
-*/
+ */
 int setupKeysAndKewords(){
 
   FILE * fp; fp = openFile("defines/keys");
@@ -83,12 +131,12 @@ void parseScript(char ** argv){
   ssize_t read;
 
   while ((read = getline(&line, &len, fp)) != -1) {
-    // if(line[0] == '#') break;
-    printf("Hewoo");
     SplitLine * sl; sl = splitLine(line, read, ' ');
-    // evaluateSplitLine(sl);
+    evaluateSplitLine(sl);
 
   }
+  // Write a function to send last sequence
+  printSequences(_script);
 
   closeFile(fp, line);
 }
