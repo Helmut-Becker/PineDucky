@@ -57,6 +57,20 @@ typedef struct Sequence{
 }Sequence;
 
 /*
+*  Struct Script
+*
+*  Struct to hold Bytesequences of 8 bytes each
+*
+*  @var quantity = Holds number of entries in sequences
+*  @var sequences = Holds Bytesequences
+*
+*/
+typedef struct Script{
+  u_int8_t quantity;
+  u_int8_t ** sequences;
+}Script;
+
+/*
  *  Struct SplitLine
  *
  *  This struct is used to split a line out of the DuckyScript into
@@ -73,19 +87,6 @@ typedef struct SplitLine{
   char ** slices;
 }SplitLine;
 
-/*
- *  Struct Script
- *
- *  Struct to hold Bytesequences of 8 bytes each
- *
- *  @var quantity = Holds number of entries in sequences
- *  @var sequences = Holds Bytesequences
- *
- */
-typedef struct Script{
-  u_int8_t quantity;
-  char ** sequences;
-}Script;
 
 /*
  *  Function printSplitLine
@@ -248,10 +249,58 @@ static void freeSplitLine(SplitLine * _sl){
   if(_sl) free(_sl);
 }
 
+// static u_int8_t * copy_uint8_Array(u_int8_t * dest, u_int8_t * src, u_int16_t len){
+//   u_int8_t * p; p = malloc(sizeof(u_int8_t) * len);
+//   for (size_t i = 0; i < len; i++) {
+//     dest[i] = src[i];
+//   }
+//   return p;
+// }
 
+static char * strrev(char * str){
+      char *p1, *p2;
 
+      if (! str || ! *str)
+            return str;
+      for (p1 = str, p2 = str + strlen(str) - 1; p2 > p1; ++p1, --p2)
+      {
+            *p1 ^= *p2;
+            *p2 ^= *p1;
+            *p1 ^= *p2;
+      }
+      return str;
+}
 
+static char * printIntToBinary(int n){
+  char p[9]; int pos = 0;
+  do{
+    if(n % 2 == 0) p[pos++] = '0';
+    else p[pos++] = '1';
+    n = n / 2;
+  }while(n > 0);
+  for (size_t i = pos; i < 8; i++) { p[pos++] = '0'; }
+  p[pos] = '\0';
+  return strrev(p);
+}
 
+static u_int8_t * insertIntoSequence(u_int8_t mask, u_int8_t * tmp_sequence, char * value){
+  printf("%s: %s\n", "Mask", printIntToBinary(mask));
+  printf("\n%s: \n", "Sequence");
+  for (size_t i = 0; i < 8; i++) {
+    printf("%c ", tmp_sequence[i]);
+  }
+  printf("\nValue: %s\n", value);
+  return tmp_sequence;
+  // need to take value apart
+  // return the sequence, because if this function has to make a new sequence, because it is full or the same letter got inserted, the new sequence can be returned
+  // checking if its full
+  // checking if the same value was inserted before, if jes make a new sequence and
+ //look out for netx spot in mask and then write a 1 in this spot, if key value was not 0x00. In this case it was a modifier
+}
+//
+// static void insertIntoScript(){
+//
+// }
 
 
 
