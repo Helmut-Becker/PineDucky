@@ -1,4 +1,10 @@
-#Key | = | Modifier | = | Sequence
+# Please keep this order:
+#1      ***** KEYS *****
+#2      ***** MODIFIERS *****
+#3      ***** KEYWORDS *****
+#4      ***** CUSTOM *****
+#
+***** KEYS *****
 a 0x400
 b 0x500
 c 0x600
@@ -35,101 +41,15 @@ z 0x1d00
 8 0x2500
 9 0x2600
 0 0x2700
-
-#*****MODIFIERS*****#
-STRG 1
-SHITF 2
-ALT 4
-WIN 8
-ALTGR 40
-
-
-
-# This way i can coose the macros for the different OS's
- #define USER_JACK 1
- #define USER_QUEEN 2
-
- #define USER USER_JACK
-
- #if USER == USER_JACK
- #define USER_VS USER_QUEEN
- #elif USER == USER_QUEEN
- #define USER_VS USER_JACK
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-a=\x00=\x04
-b=\x00=\x05
-c=\x00=\x06
-d=\x00=\x07
-e=\x00=\x08
-f=\x00=\x09
-g=\x00=\x0A
-h=\x00=\x0B
-i=\x00=\x0C
-j=\x00=\x0D
-k=\x00=\x0E
-l=\x00=\x0F
-m=\x00=\x10
-n=\x00=\x11
-o=\x00=\x12
-p=\x00=\x13
-q=\x00=\x14
-r=\x00=\x15
-s=\x00=\x16
-t=\x00=\x17
-u=\x00=\x18
-v=\x00=\x19
-w=\x00=\x1A
-x=\x00=\x1B
-y=\x00=\x1D
-z=\x00=\x1C
-1=\x00=\x1E
-2=\x00=\x1F
-3=\x00=\x20
-4=\x00=\x21
-5=\x00=\x22
-6=\x00=\x23
-7=\x00=\x24
-8=\x00=\x25
-9=\x00=\x26
-0=\x00=\x27
-!=\x20=\x1E
- =\x00=\x2C
--=\x00=\x38
-+=\x00=\x30
-.=\x00=\x37
-/=\x20=\x24
-_=\x20=\x38
-&=\x20=\x23
->=\x20=\x64
-<=\x00=\x64
-#=\x00=\x31
-"=\x20=\x1F
-@=\x40=\x14
-(=\x20=\x25
-)=\x20=\x26
-'=\x20=\x31
-;=\x20=\x36
-:=\x20=\x37
-?=\x20=\x2D
-$=\x20=\x21
-*=\x20=\x30
-[=\x40=\x25
-]=\x40=\x26
-|=\x40=\x64
-~=\x40=\x30
-%=\x20=\x22
-\=\x40=\x2D
-*/
+ENTER 0x2800
+***** MODIFIERS *****
+STRG 0x0001
+SHIFT 0x0002
+ALT 0x0004
+WIN 0x0008
+ALTGR 0x0040
+***** KEYWORDS *****
+DELAY 0x0000
+DEFAULT_DELAY 0x0000
+STRING 0x0000
+***** CUSTOM *****
