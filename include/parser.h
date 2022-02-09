@@ -74,6 +74,29 @@ typedef struct SplitLine{
 }SplitLine;
 
 /*
+ *  Struct Time
+ *
+ *  Holds @var delay number of milliseconds
+ *    and a position @var position
+ *
+*/
+typedef struct Time{
+  int delay;
+  u_int16_t position;
+}Time;
+
+/*
+ *  Struct Delay
+ *
+ *  Holds a @var quantity of @var entries of type Time
+ *
+ */
+typedef struct Delay{
+  u_int16_t quantity;
+  Time * entries;
+}Delay;
+
+/*
  *  Function printSplitLine
  *
  *  Prints all contents of split line onto STDOUT
@@ -110,6 +133,7 @@ static void insertIntoDictionary(Dictionary * _dictionary,
                                 )
 {
   // Make space for another entry
+  // REMOVE THIS CAST TO ENTRY *
   if(DEBUG) printf("%s\n", "Allocating memory for new entry");
   _dictionary->entries = (Entry *)realloc(_dictionary->entries, sizeof(Entry) * (_dictionary->quantity+1));
   if(DEBUG) printf("\t%s: %d\n", "Keyword_length", keyword_length);
@@ -127,6 +151,27 @@ static void insertIntoDictionary(Dictionary * _dictionary,
   if(DEBUG) printf("\t%s: %x\n", "Value", _dictionary->entries[_dictionary->quantity].value);
   _dictionary->quantity += 1;
   if(DEBUG) printf("\t%s: %d\n", "Dictionary->quantity", _dictionary->quantity);
+  if(DEBUG) printf("%s\n\n", "Done");
+}
+
+/*
+ *  Function insertIntoDelay
+ *
+ *  Inserts delays of type Time into @param _delay
+ *
+ */
+static void insertIntoDelay(Delay * _delay, u_int16_t position, int time){
+  // Make space for new entry
+  if(DEBUG) printf("%s\n", "Allocating memory for new entry");
+  _delay->entries = realloc(_delay->entries, sizeof(Time) * (_delay->quantity+1));
+  _delay->entries[_delay->quantity].delay = time;
+  _delay->entries[_delay->quantity].position = position;
+  if(DEBUG) printf("\t%s: %p\n", "Adress of Entry", &_delay->entries[_delay->quantity]);
+  if(DEBUG) printf("\t%s: %p\n", "Adress of Entry.delay", &_delay->entries[_delay->quantity].delay);
+  if(DEBUG) printf("\t%s: %d\n", "Delay", _delay->entries[_delay->quantity].delay);
+  if(DEBUG) printf("\t%s: %d\n", "Position", _delay->entries[_delay->quantity].position);
+  _delay->quantity += 1;
+  if(DEBUG) printf("\t%s: %d\n", "Delay->quantity", _delay->quantity);
   if(DEBUG) printf("%s\n\n", "Done");
 }
 
@@ -295,9 +340,10 @@ static u_int8_t inSequence(u_int8_t key, u_int8_t * sequence){
  *  Function printSequences
  *
  *  Prints sequences from @param _sc one by one
+ *  Adds entries from @param _delay at given positions
  *
  */
-static void printSequences(Script * _sc){
+static void printSequences(Script * _sc, Delay * _dl){
   printf("\n%s\n", "All Sequences:");
   for (size_t i = 0; i < _sc->quantity; i++) {
     printf("\t%s: %d\n\t\t", "Sequence", i);
@@ -305,6 +351,11 @@ static void printSequences(Script * _sc){
       printf("%x", _sc->sequences[i][j]);
     }
     printf("\n");
+    for (size_t k = 0; k < _dl->quantity; k++) {
+      if(_dl->entries[k].position == i){
+        printf("\t%s %lf\n", "sleep", (float)_dl->entries[k].delay / 1000);
+      }
+    }
   }
 }
 
@@ -413,7 +464,7 @@ static u_int8_t sequenceIsEmpty(u_int8_t ** tmp_sequence){
  *    inserts @var keyValue into @param tmp_sequence
  *
  */
-static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, u_int8_t ** tmp_sequence, char * value){
+static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, u_int8_t ** tmp_sequence, char * value, u_int8_t length){
   if(DEBUG) printf("\n-------------------------------------------\n");
   char * maskInBin = calloc(9, sizeof(char));
   printIntToBinary(maskInBin, *mask);
@@ -424,10 +475,11 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   for (size_t i = 0; i < 8; i++) {
     if(DEBUG) printf("%x ", (*tmp_sequence)[i]);
   }
-  if(DEBUG) printf("\nValue:\n\t%c\n\n", *value);
-
+  if(length < 2 && DEBUG) printf("\nValue:\n\t%c\n\n", *value);
+  else if (DEBUG) printf("\nValue:\n\t%s\n\n", value);
+  // Make conditional statement here, searchDictionary(isString == 1 ? value : charToString(value));
   // Search corrispondig bytesequence for value in dictionary
-  u_int16_t seq = searchDictionary(_dc, charToString(value));
+  u_int16_t seq = searchDictionary(_dc, (length < 2) ? charToString(value) : value);
   u_int8_t modifier = seq & 0x00FF;
   u_int8_t keyValue = seq >> 8;
   if(DEBUG) printf("Key value is: %x\n", keyValue);
@@ -440,7 +492,7 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   }
 
   // Checking if the current value is already present in tmp_sequence, if yes send Sequence and insert current value into new one
-  if(inSequence(keyValue, (*tmp_sequence))){
+  if(keyValue != 0 && inSequence(keyValue, (*tmp_sequence))){
     insertIntoScript(_sc, tmp_sequence, mask);
     if(DEBUG) printf("Value was already present\n");
   }
@@ -455,7 +507,7 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   /*
    *  Adding two modifiers with bitwise OR '|'
    *
-   *  Note: Currently not tested...
+   *  Note: Currently kind of tested...
    *
    *  SHIFT = 00000010
    *  ALT   = 00000001
@@ -464,7 +516,8 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
    *
    */
   (*tmp_sequence)[0] = (*tmp_sequence)[0] | modifier;
-
+  // if @var keyValue is 0 then we dont need to waste a free spot, we can just return here.
+  if(keyValue == 0) return;
   printIntToBinary(maskInBin, *mask);
   u_int8_t free = nextFreeSpot(maskInBin);
   if(DEBUG) printf("Inserting into: tmp_sequence[%d]\n", free);
@@ -473,6 +526,10 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
 
   //Set bit at position @var free to 1
   modifyBit(mask, free, 1);
+  if(DEBUG) printf("\n%s:\n\t", "Sequence");
+  for (size_t i = 0; i < 8; i++) {
+    if(DEBUG) printf("%x ", (*tmp_sequence)[i]);
+  }
 
   if(DEBUG) printf("\n-------------------------------------------\n");
 }
