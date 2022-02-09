@@ -2,6 +2,8 @@
 
 Dictionary * _dictionary;
 Script * _script;
+Delay * _delay;
+int _default_delay = 0;
 
 /*
  *  Function allocate
@@ -23,6 +25,13 @@ void allocate(){
   if(DEBUG) printf("\n%s\n", "Allocating Memory for Script.");
   if(DEBUG) printf("\t%s %p\n", "Script address: ", _script);
   if(DEBUG) printf("\t%s %d\n", "Script->quantity =");
+
+  _delay = malloc(sizeof(Delay));
+  _delay->quantity = 0;
+  //_delay->entries = malloc(sizeof(Time *));
+  if(DEBUG) printf("\n%s\n", "Allocating Memory for Delay.");
+  if(DEBUG) printf("\t%s %p\n", "Delay address: ", _script);
+  if(DEBUG) printf("\t%s %d\n", "Delay->quantity =");
 }
 
 /*
@@ -42,7 +51,7 @@ void evalString(SplitLine * _sl){
 
   for (size_t i = 1; i < _sl->quantity; i++) {
     for (size_t j = 0; j < _sl->length[i]; j++) {
-      insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence, &_sl->slices[i][j]);
+      insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence, &_sl->slices[i][j], 1);
     }
   }
 }
@@ -56,7 +65,20 @@ void evalString(SplitLine * _sl){
  */
 void evalKeyword(SplitLine * _sl){
   for (size_t i = 0; i < _sl->quantity; i++) {
-    if(strcmp(_sl->slices[0], "STRING") == 0) evalString(_sl); return;
+    if(strcmp(_sl->slices[0], "STRING") == 0){
+      evalString(_sl);
+      return;
+    }
+    if(strcmp(_sl->slices[0], "DELAY") == 0){
+      insertIntoDelay(_delay, _script->quantity, atoi(_sl->slices[1]));
+      if(DEBUG) printf("%s: %d %s: %d\n", "Insert DELAY", atoi(_sl->slices[1]), "at position", _script->quantity);
+      return;
+    }
+    if(strcmp(_sl->slices[0], "DEFAULT_DELAY") == 0){
+      _default_delay = atoi(_sl->slices[1]);
+      if(DEBUG) printf("%s: %d", "Set DEFAULT_DELAY to", _default_delay);
+      return;
+    }
   }
 }
 
@@ -70,18 +92,41 @@ void evalKeyword(SplitLine * _sl){
  */
 void evaluateSplitLine(SplitLine * _sl){
 
+  u_int8_t ** tmp_sequence; tmp_sequence = malloc(sizeof(u_int8_t *));
+  *tmp_sequence = calloc(8, sizeof(u_int8_t));
+  u_int8_t * tmp_mask; tmp_mask = calloc(1, sizeof(u_int8_t));
+  *tmp_mask = 0b01000000;
+
   if(strcmp(_sl->slices[0], "REM") == 0) return; // Check for comment
   for (int i = 0; i < _sl->quantity; i++){
     // Key, Modifier, Keyword, Custom
     for (size_t j = 0; j < _dictionary->quantity; j++) {
       if (strcmp(_sl->slices[i], _dictionary->entries[j].keyword) == 0){
-        if(_dictionary->entries[j].type == Key) printf("FOUND KEY\n");
-        if(_dictionary->entries[j].type == Modifier) printf("FOUND MODIFIER\n");
-        if(_dictionary->entries[j].type == Keyword) evalKeyword(_sl); printf("FOUND KEYWORD\n");
+        if(_dictionary->entries[j].type == Key){
+          insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence,
+                            _dictionary->entries[j].keyword,
+                            _dictionary->entries[j].keyword_length);
+          if(DEBUG) printf("FOUND KEY: %s\n", _dictionary->entries[j].keyword);
+        }
+        if(_dictionary->entries[j].type == Modifier){
+          insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence,
+                            _dictionary->entries[j].keyword,
+                            _dictionary->entries[j].keyword_length);
+          if(DEBUG) printf("FOUND MODIFIER: %s\n", _dictionary->entries[j].keyword);
+          continue;
+        }
+        if(_dictionary->entries[j].type == Keyword){
+          evalKeyword(_sl);
+          if(DEBUG) printf("FOUND KEYWORD: %s\n", _dictionary->entries[j].keyword);
+          continue;
+        }
         if(_dictionary->entries[j].type == Custom) printf("FOUND CUSTOM\n");
       }
     }
   }
+  insertIntoScript(_script, tmp_sequence, tmp_mask); // sending line
+  // Check default delay
+  if(_default_delay) insertIntoDelay(_delay, _script->quantity, _default_delay);
 }
 
 /*
@@ -118,7 +163,6 @@ int setupKeysAndKewords(){
   return 0;
 }
 
-
 void parseScript(char ** argv){
   allocate();
   if(setupKeysAndKewords()){
@@ -136,7 +180,7 @@ void parseScript(char ** argv){
 
   }
   // Write a function to send last sequence
-  printSequences(_script);
+  printSequences(_script, _delay);
 
   closeFile(fp, line);
 }
