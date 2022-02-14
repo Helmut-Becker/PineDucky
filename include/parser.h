@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define DEBUG 0
+#define DEBUG 1
 
 typedef enum Type{Key, Modifier, Keyword, Custom}Type;
 
@@ -499,13 +499,17 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
     if(DEBUG) printf("Value was already present\n");
   }
 
+  printf("tmp_sequence empty: %d\n", *mask == 0b01000000);
+  printf("modifier same: %d\n", modifier == (*tmp_sequence)[0]);
+  printf("Result: %d", !(!*mask == 0b01000000 && modifier != (*tmp_sequence)[0]));
+
+  // mask is empty, or modifier is same
   // checking if sequence is empty, then its okay to add another modifier, but if its already filled with a key, then its not okay to add another modifier
-  if(!sequenceIsEmpty(tmp_sequence) && modifier != 0){
+  if((!(*mask == 0b01000000 || modifier == (*tmp_sequence)[0])) ){
     insertIntoScript(_sc, tmp_sequence, mask);
     if(DEBUG) printf("MODIFIER WAS NOT 0 so sending");
   }
 
-  // check if sequence is empty, if empty then multiple modifiers are okay. But if one Modifier is inserted and then a key and then another modifier, that not okay, it has to be returned before and inserted into a new sequence
   /*
    *  Adding two modifiers with bitwise OR '|'
    *
@@ -536,7 +540,7 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   if(DEBUG) printf("\n-------------------------------------------\n");
 }
 
-
+// send line if next key doesnt have same modifier as already inserted.
 
 
 
