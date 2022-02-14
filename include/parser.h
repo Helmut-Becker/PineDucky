@@ -498,11 +498,6 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
     insertIntoScript(_sc, tmp_sequence, mask);
     if(DEBUG) printf("Value was already present\n");
   }
-
-  printf("tmp_sequence empty: %d\n", *mask == 0b01000000);
-  printf("modifier same: %d\n", modifier == (*tmp_sequence)[0]);
-  printf("Result: %d", !(!*mask == 0b01000000 && modifier != (*tmp_sequence)[0]));
-
   // mask is empty, or modifier is same
   // checking if sequence is empty, then its okay to add another modifier, but if its already filled with a key, then its not okay to add another modifier
   if((!(*mask == 0b01000000 || modifier == (*tmp_sequence)[0])) ){
