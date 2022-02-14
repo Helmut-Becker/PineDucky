@@ -119,7 +119,7 @@ void evaluateSplitLine(SplitLine * _sl){
         if(_dictionary->entries[j].type == Keyword){
           evalKeyword(_sl);
           if(DEBUG) printf("FOUND KEYWORD: %s\n", _dictionary->entries[j].keyword);
-          break;
+          continue;
         }
         if(_dictionary->entries[j].type == Custom) printf("FOUND CUSTOM\n");
       }
