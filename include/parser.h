@@ -540,9 +540,6 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   if(DEBUG) printf("\n-------------------------------------------\n");
 }
 
-// send line if next key doesnt have same modifier as already inserted.
-
-
 
 
 
