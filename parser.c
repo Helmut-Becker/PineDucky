@@ -54,6 +54,7 @@ void evalString(SplitLine * _sl){
       insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence, &_sl->slices[i][j], 1);
     }
   }
+  insertIntoScript(_script, tmp_sequence, tmp_mask); // sending line
 }
 
 /*
@@ -118,7 +119,7 @@ void evaluateSplitLine(SplitLine * _sl){
         if(_dictionary->entries[j].type == Keyword){
           evalKeyword(_sl);
           if(DEBUG) printf("FOUND KEYWORD: %s\n", _dictionary->entries[j].keyword);
-          continue;
+          break;
         }
         if(_dictionary->entries[j].type == Custom) printf("FOUND CUSTOM\n");
       }
@@ -126,7 +127,9 @@ void evaluateSplitLine(SplitLine * _sl){
   }
   insertIntoScript(_script, tmp_sequence, tmp_mask); // sending line
   // Check default delay
-  if(_default_delay) insertIntoDelay(_delay, _script->quantity, _default_delay);
+  if(_default_delay){
+    insertIntoDelay(_delay, _script->quantity-1, _default_delay);
+  }
 }
 
 /*
@@ -177,6 +180,7 @@ void parseScript(char ** argv){
   while ((read = getline(&line, &len, fp)) != -1) {
     SplitLine * sl; sl = splitLine(line, read, ' ');
     evaluateSplitLine(sl);
+
 
   }
   // Write a function to send last sequence
