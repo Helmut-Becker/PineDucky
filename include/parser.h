@@ -344,16 +344,18 @@ static u_int8_t inSequence(u_int8_t key, u_int8_t * sequence){
  *
  */
 static void printSequences(Script * _sc, Delay * _dl){
-  printf("\n%s\n", "All Sequences:");
+  // printf("\n%s\n", "All Sequences:");
   for (size_t i = 0; i < _sc->quantity; i++) {
-    printf("\t%s: %d\n\t\t", "Sequence", i);
+    // printf("\t%s: %d\n\t\t", "Sequence", i);
+    printf("echo -ne \"");
     for (size_t j = 0; j < 8; j++) {
-      printf("%x", _sc->sequences[i][j]);
+      printf("\\0x%x", _sc->sequences[i][j]);
     }
+    printf("\" > /dev/hidg0 &&");
     printf("\n");
     for (size_t k = 0; k < _dl->quantity; k++) {
       if(_dl->entries[k].position == i){
-        printf("\t%s %lf\n", "sleep", (float)_dl->entries[k].delay / 1000);
+        printf("%s %lf\n", "sleep", (float)_dl->entries[k].delay / 1000);
       }
     }
   }
