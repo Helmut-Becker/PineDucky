@@ -365,7 +365,7 @@ static void printSequences(Script * _sc, Delay * _dl){
       printf("\\x%x", _sc->sequences[i][j]);
     }
     if(isEmpty(_sc->sequences[i]) || _sc->sequences[i][0] != 0) printf("\" > /dev/hidg0");
-    else printf("\" > /dev/hidg0");
+    else printf("\" > /dev/hidg0 &&");
     printf("\n");
     for (size_t k = 0; k < _dl->quantity; k++) {
       if(_dl->entries[k].position == i){
