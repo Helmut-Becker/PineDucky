@@ -358,6 +358,7 @@ static u_int8_t isEmpty(u_int8_t * seq){
  */
 static void printSequences(Script * _sc, Delay * _dl){
   // printf("\n%s\n", "All Sequences:");
+  printf("%s\n\n", "#!/bin/bash");
   for (size_t i = 0; i < _sc->quantity; i++) {
     // printf("\t%s: %d\n\t\t", "Sequence", i);
     printf("echo -ne \"");
