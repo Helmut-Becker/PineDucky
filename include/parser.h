@@ -386,7 +386,7 @@ static u_int16_t searchDictionary(Dictionary * _dc, char * str){
   for (size_t i = 0; i < _dc->quantity; i++) {
     if(strcmp(str, _dc->entries[i].keyword) == 0) return _dc->entries[i].value;
   }
-  printf("KEY %d NOT FOUND IN DICTIONARY!!!");
+  if(DEBUG) printf("KEY %s NOT FOUND IN DICTIONARY!!!", str);
 }
 
 /*
@@ -501,7 +501,8 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   }
   // mask is empty, or modifier is same
   // checking if sequence is empty, then its okay to add another modifier, but if its already filled with a key, then its not okay to add another modifier
-  if((!(*mask == 0b01000000 || modifier == (*tmp_sequence)[0])) ){
+  if(!(*mask == 0b01000000 || modifier == (*tmp_sequence)[0])){
+    insertIntoScript(_sc, tmp_sequence, mask);
     insertIntoScript(_sc, tmp_sequence, mask);
     if(DEBUG) printf("MODIFIER WAS NOT 0 so sending");
   }
