@@ -142,7 +142,7 @@ void evaluateSplitLine(SplitLine * _sl){
  */
 int setupKeysAndKewords(){
 
-  FILE * fp; fp = openFile("defines/keys");
+  FILE * fp; fp = openFile("defines/keys", "r");
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
@@ -172,7 +172,7 @@ void parseScript(char ** argv){
     printf("%s\n", "Something went wront while populating the dictionary, exiting...");
     exit(EXIT_FAILURE);
   }
-  FILE * fp = openFile(argv[1]);
+  FILE * fp = openFile(argv[1], "r");
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
@@ -184,9 +184,12 @@ void parseScript(char ** argv){
 
   }
   // Write a function to send last sequence
-  printSequences(_script, _delay);
 
   closeFile(fp, line);
+  fp = openFile(argv[2], "ab+");
+  line = NULL;
+  len = 0;
+  writeSequences(_script, _delay, fp);
 }
 
 

@@ -245,9 +245,9 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
  *  Opens file and @return filepointer
  *
  */
-static FILE * openFile(char * path){
+static FILE * openFile(char * path, char * args){
   FILE * fp;
-  fp = fopen(path, "r");
+  fp = fopen(path, args);
   if (fp == NULL){
     printf("%s\n", "File not found, exiting...");
     exit(EXIT_FAILURE);
@@ -350,27 +350,23 @@ static u_int8_t isEmpty(u_int8_t * seq){
 }
 
 /*
- *  Function printSequences
+ * Function writeSequences
  *
- *  Prints sequences from @param _sc one by one
- *  Adds entries from @param _delay at given positions
+ *  Well, writes sequences to @param fp
  *
  */
-static void printSequences(Script * _sc, Delay * _dl){
-  // printf("\n%s\n", "All Sequences:");
-  printf("%s\n\n", "#!/bin/bash");
+static u_int8_t writeSequences(Script * _sc, Delay * _dl, FILE * fp){
+  fprintf(fp, "%s\n\n", "#!/bin/bash");
   for (size_t i = 0; i < _sc->quantity; i++) {
-    // printf("\t%s: %d\n\t\t", "Sequence", i);
-    printf("echo -ne \"");
+    fprintf(fp, "%s", "echo -ne \"");
     for (size_t j = 0; j < 8; j++) {
-      printf("\\x%x", _sc->sequences[i][j]);
+      fprintf(fp, "%s%x", "\\x", _sc->sequences[i][j]);
     }
-    if(isEmpty(_sc->sequences[i]) || _sc->sequences[i][0] != 0) printf("\" > /dev/hidg0");
-    else printf("\" > /dev/hidg0 &&");
-    printf("\n");
+    if(isEmpty(_sc->sequences[i]) || _sc->sequences[i][0] != 0) fprintf(fp, "%s\n", "\" > /dev/hidg0");
+    else fprintf(fp, "%s\n", "\" > /dev/hidg0 &&");
     for (size_t k = 0; k < _dl->quantity; k++) {
       if(_dl->entries[k].position == i){
-        printf("%s %lf\n", "sleep", (float)_dl->entries[k].delay / 1000);
+        fprintf(fp, "%s %lf\n", "sleep", (float)_dl->entries[k].delay / 1000);
       }
     }
   }
