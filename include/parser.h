@@ -349,7 +349,7 @@ static void printSequences(Script * _sc, Delay * _dl){
     // printf("\t%s: %d\n\t\t", "Sequence", i);
     printf("echo -ne \"");
     for (size_t j = 0; j < 8; j++) {
-      printf("\\0x%x", _sc->sequences[i][j]);
+      printf("\\x%x", _sc->sequences[i][j]);
     }
     printf("\" > /dev/hidg0 &&");
     printf("\n");
@@ -443,20 +443,6 @@ static void modifyBit(u_int8_t * mask, u_int8_t p, u_int8_t value){
   *mask = ((*mask & ~_m) | (value << p));
   if(DEBUG) printf("= %s\n", printIntToBinary(q, *mask));
 
-}
-
-/*
- *  Function sequenceIsEmpty
- *
- *  Checks if sequence[2] till sequence[8] is equal to 0 or not
- *  @return = returns 1 if sequence is empty
- *
- */
-static u_int8_t sequenceIsEmpty(u_int8_t ** tmp_sequence){
-  for (size_t i = 2; i < 8; i++) {
-    if((*tmp_sequence)[i] == 1) return 0;
-  }
-  return 1;
 }
 
 /*
