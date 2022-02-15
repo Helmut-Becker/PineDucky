@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 typedef enum Type{Key, Modifier, Keyword, Custom}Type;
 
@@ -336,6 +336,12 @@ static u_int8_t inSequence(u_int8_t key, u_int8_t * sequence){
   return 0;
 }
 
+/*
+ *  Function isEmpty
+ *
+ *  Checks, if @param seq is empty and @return 1 if so
+ *
+ */
 static u_int8_t isEmpty(u_int8_t * seq){
   for (size_t i = 0; i < 8; i++) {
     if(seq[i] != 0) return 0;
@@ -499,7 +505,7 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
     insertIntoScript(_sc, tmp_sequence, mask);
     if(DEBUG) printf("MODIFIER WAS NOT 0 so sending");
   }
-
+  if(keyValue == 0x0a) insertIntoScript(_sc, tmp_sequence, mask);
   /*
    *  Adding two modifiers with bitwise OR '|'
    *
@@ -518,8 +524,9 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   u_int8_t free = nextFreeSpot(maskInBin);
   if(DEBUG) printf("Inserting into: tmp_sequence[%d]\n", free);
 
-  (*tmp_sequence)[free] = keyValue;
-
+  (*tmp_sequence)[keyValue == 0x0a ? 7 : free] = keyValue;
+  if(keyValue == 0x0a) insertIntoScript(_sc, tmp_sequence, mask);
+  
   //Set bit at position @var free to 1
   modifyBit(mask, free, 1);
   if(DEBUG) printf("\n%s:\n\t", "Sequence");
