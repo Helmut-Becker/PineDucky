@@ -190,6 +190,12 @@ void parseScript(char ** argv){
   line = NULL;
   len = 0;
   writeSequences(_script, _delay, fp);
+  closeFile(fp, line);
+
+  // executing outfile
+  char *command = malloc(sizeof(char) * (strlen(argv[2])+3));
+  sprintf(command, "%s %s", "sh", argv[2]);
+  system(command);
 }
 
 
