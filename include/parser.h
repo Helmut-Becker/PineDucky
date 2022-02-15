@@ -490,6 +490,7 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   // Checking if the current value is already present in tmp_sequence, if yes send Sequence and insert current value into new one
   if(keyValue != 0 && inSequence(keyValue, (*tmp_sequence))){
     insertIntoScript(_sc, tmp_sequence, mask);
+    insertIntoScript(_sc, tmp_sequence, mask);
     if(DEBUG) printf("Value was already present\n");
   }
   // mask is empty, or modifier is same
