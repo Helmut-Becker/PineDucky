@@ -186,6 +186,11 @@ void parseScript(char ** argv){
   // Write a function to send last sequence
 
   closeFile(fp, line);
+  // rm outfile
+  char *command = malloc(sizeof(char) * (strlen(argv[2])+3));
+  sprintf(command, "%s %s", "rm", argv[2]);
+  system(command);
+  
   fp = openFile(argv[2], "w");
   line = NULL;
   len = 0;
