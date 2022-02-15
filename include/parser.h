@@ -336,6 +336,13 @@ static u_int8_t inSequence(u_int8_t key, u_int8_t * sequence){
   return 0;
 }
 
+static u_int8_t isEmpty(u_int8_t * seq){
+  for (size_t i = 0; i < 8; i++) {
+    if(seq[i] != 0) return 0;
+  }
+  return 1;
+}
+
 /*
  *  Function printSequences
  *
@@ -351,7 +358,8 @@ static void printSequences(Script * _sc, Delay * _dl){
     for (size_t j = 0; j < 8; j++) {
       printf("\\x%x", _sc->sequences[i][j]);
     }
-    printf("\" > /dev/hidg0 &&");
+    if(isEmpty(_sc->sequences[i]) || _sc->sequences[i][0] != 0) printf("\" > /dev/hidg0");
+    else printf("\" > /dev/hidg0 &&");
     printf("\n");
     for (size_t k = 0; k < _dl->quantity; k++) {
       if(_dl->entries[k].position == i){
