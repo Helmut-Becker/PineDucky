@@ -149,10 +149,10 @@ int setupKeysAndKewords(){
   u_int8_t pos;
 
   while ((read = getline(&line, &len, fp)) != -1) {
-    if(line[0] == '#') continue;
+    if(line[0] == '<' && line[1] == '#') continue;
 
     SplitLine * _sl; _sl = splitLine(line, read, ' ');
-    if (line[0] == '*'){
+    if (line[0] == '*' && line[1] == '*'){
       if(strcmp(_sl->slices[1], "KEYS") == 0) pos = 0;
       else if(strcmp(_sl->slices[1], "MODIFIERS") == 0) pos = 1;
       else if(strcmp(_sl->slices[1], "KEYWORDS") == 0) pos = 2;
