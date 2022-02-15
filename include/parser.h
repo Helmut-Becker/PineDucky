@@ -365,7 +365,7 @@ static void printSequences(Script * _sc, Delay * _dl){
       printf("\\x%x", _sc->sequences[i][j]);
     }
     if(isEmpty(_sc->sequences[i]) || _sc->sequences[i][0] != 0) printf("\" > /dev/hidg0");
-    else printf("\" > /dev/hidg0 &&");
+    else printf("\" > /dev/hidg0");
     printf("\n");
     for (size_t k = 0; k < _dl->quantity; k++) {
       if(_dl->entries[k].position == i){
@@ -526,7 +526,7 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
 
   (*tmp_sequence)[keyValue == 0x0a ? 7 : free] = keyValue;
   if(keyValue == 0x0a) insertIntoScript(_sc, tmp_sequence, mask);
-  
+
   //Set bit at position @var free to 1
   modifyBit(mask, free, 1);
   if(DEBUG) printf("\n%s:\n\t", "Sequence");
