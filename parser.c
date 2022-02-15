@@ -186,7 +186,7 @@ void parseScript(char ** argv){
   // Write a function to send last sequence
 
   closeFile(fp, line);
-  fp = openFile(argv[2], "w+");
+  fp = openFile(argv[2], "w");
   line = NULL;
   len = 0;
   writeSequences(_script, _delay, fp);
