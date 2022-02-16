@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define DEBUG 0
+#define DEBUG 1
 
 typedef enum Type{Key, Modifier, Keyword, Custom}Type;
 
@@ -340,6 +340,20 @@ static u_int8_t inSequence(u_int8_t key, u_int8_t * sequence){
 }
 
 /*
+ *  Function inPrevSequence
+ *
+ *  Checks if @param key is in @param _sc previous sequence
+ *
+ */
+static u_int8_t inPrevSequence(Script * _sc, u_int8_t key){
+  if(_sc->quantity <= 1) return 0;
+  for (size_t i = 0; i < 8; i++) {
+    if(key == _sc->sequences[_sc->quantity-1][i]) return 1;
+  }
+  return 0;
+}
+
+/*
  *  Function isEmpty
  *
  *  Checks, if @param seq is empty and @return 1 if so
@@ -500,8 +514,8 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
     if(DEBUG) printf("FULL\n");
   }
 
-  // Checking if the current value is already present in tmp_sequence, if yes send Sequence and insert current value into new one
-  if(keyValue != 0 && inSequence(keyValue, (*tmp_sequence))){
+  // Checking if the current value is already present in tmp_sequence, or in sequence before, if yes send Sequence and insert current value into new one
+  if(keyValue != 0 && (inSequence(keyValue, (*tmp_sequence)) || inPrevSequence(_sc, keyValue))){
     insertIntoScript(_sc, tmp_sequence, mask);
     insertIntoScript(_sc, tmp_sequence, mask);
     if(DEBUG) printf("Value was already present\n");
