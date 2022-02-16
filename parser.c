@@ -51,8 +51,11 @@ void evalString(SplitLine * _sl){
 
   for (size_t i = 1; i < _sl->quantity; i++) {
     for (size_t j = 0; j < _sl->length[i]; j++) {
-      insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence, &_sl->slices[i][j], 1);
+      insertIntoSequence(_dictionary, _script, tmp_mask,
+                          tmp_sequence, &_sl->slices[i][j], 1);
     }
+    if(i < _sl->quantity-1) insertIntoSequence(_dictionary, _script, tmp_mask,
+                                                tmp_sequence, " ", 2);
   }
   insertIntoScript(_script, tmp_sequence, tmp_mask); // sending line
 }
@@ -142,17 +145,17 @@ void evaluateSplitLine(SplitLine * _sl){
  */
 int setupKeysAndKewords(){
 
-  FILE * fp; fp = openFile("defines/keys");
+  FILE * fp; fp = openFile("defines/keys", "r");
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
   u_int8_t pos;
 
   while ((read = getline(&line, &len, fp)) != -1) {
-    if(line[0] == '#') continue;
+    if(line[0] == '<' && line[1] == '#') continue;
 
     SplitLine * _sl; _sl = splitLine(line, read, ' ');
-    if (line[0] == '*'){
+    if (line[0] == '*' && line[1] == '*'){
       if(strcmp(_sl->slices[1], "KEYS") == 0) pos = 0;
       else if(strcmp(_sl->slices[1], "MODIFIERS") == 0) pos = 1;
       else if(strcmp(_sl->slices[1], "KEYWORDS") == 0) pos = 2;
@@ -172,7 +175,7 @@ void parseScript(char ** argv){
     printf("%s\n", "Something went wront while populating the dictionary, exiting...");
     exit(EXIT_FAILURE);
   }
-  FILE * fp = openFile(argv[1]);
+  FILE * fp = openFile(argv[1], "r");
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
@@ -184,9 +187,19 @@ void parseScript(char ** argv){
 
   }
   // Write a function to send last sequence
-  printSequences(_script, _delay);
 
   closeFile(fp, line);
+
+  fp = openFile(argv[2], "w");
+  line = NULL;
+  len = 0;
+  writeSequences(_script, _delay, fp);
+  closeFile(fp, line);
+
+  // executing outfile
+  char *command = malloc(sizeof(char) * (strlen(argv[2])+5));
+  sprintf(command, "%s %s", "bash", argv[2]);
+  system(command);
 }
 
 

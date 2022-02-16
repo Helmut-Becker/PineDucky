@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 typedef enum Type{Key, Modifier, Keyword, Custom}Type;
 
@@ -52,7 +52,7 @@ typedef struct Dictionary{
 *
 */
 typedef struct Script{
-  u_int8_t quantity;
+  u_int16_t quantity;
   u_int8_t ** sequences;
 }Script;
 
@@ -69,7 +69,7 @@ typedef struct Script{
  */
 typedef struct SplitLine{
   u_int8_t quantity;
-  u_int8_t * length;
+  u_int16_t * length;
   char ** slices;
 }SplitLine;
 
@@ -191,17 +191,17 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
   // printf("%s: %d %s: %d\n", "Sizeof SplitLine", sizeof(SplitLine), "Sizeof Splitline* ", sizeof(SplitLine *));
   result = (SplitLine *)calloc(1, sizeof(struct SplitLine));
   result->quantity = 0;
-  result->length = malloc(sizeof(u_int8_t));
+  result->length = malloc(sizeof(u_int16_t));
   result->slices = malloc(sizeof(char *)*3); // If I change this to 3 = errors häää
-  char * tmp; tmp = malloc(200 * sizeof(char));
+  char * tmp; tmp = malloc(1000 * sizeof(char));
   //
   // result->slices   p--->   char *  p---> char *
   //
   //
   u_int16_t offset = 0;
   for(int i = 0; i < len; i++){
-    if(line[i] == delim || i == len-1){
-      result->length = (u_int8_t *)realloc(result->length, (result->quantity)+1);
+    if(i != 0 && line[i] == delim || i == len-1){
+      result->length = realloc(result->length, result->quantity+1);
       if(DEBUG) printf("result address: %p\n", result);
       if(DEBUG) printf("result->quantity address: %p\n", &result->quantity);
       if(DEBUG) printf("result->slices address: %p\n", result->slices);
@@ -211,7 +211,7 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
       if(DEBUG) printf("result->slices[result->quantity] malloced size: %d\n", i-offset+1);
 
       if(DEBUG) printf("result->slices[result->quantity] address: %p\n", &result->slices[result->quantity]);
-      int j = 0;
+      u_int16_t j = 0;
       while (j < i-offset){
         // if(DEBUG) printf("insert: %c at ", tmp[j]);
         // if(DEBUG) printf("j: %d\n", j);
@@ -223,10 +223,13 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
       result->slices[result->quantity][j] = '\0';
       if(DEBUG) printf("%s: %d\n", "Done with inserting i",i);
       offset = (u_int16_t)i+1;
+      if(DEBUG) printf("%s: %p\n", "Address of result->length[result->quantity]", &result->length[result->quantity]);
+      // result->length[result->quantity] = malloc(sizeof(u_int16_t));
       result->length[result->quantity] = j;
       if(DEBUG) printf("%s %d %s%d%s\n", "inserting", j, "into result->length[", result->quantity, "]");
+      if(DEBUG) printf("Currently inserted %d\n", result->length[result->quantity]);
       free(tmp);
-      tmp = malloc(200  * sizeof(char));
+      tmp = malloc(1000  * sizeof(char));
       result->quantity += 1;
       if(DEBUG) printf("%s\n", "----------------------------------------------------------");
     }else{
@@ -245,9 +248,9 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
  *  Opens file and @return filepointer
  *
  */
-static FILE * openFile(char * path){
+static FILE * openFile(char * path, char * args){
   FILE * fp;
-  fp = fopen(path, "r");
+  fp = fopen(path, args);
   if (fp == NULL){
     printf("%s\n", "File not found, exiting...");
     exit(EXIT_FAILURE);
@@ -337,25 +340,50 @@ static u_int8_t inSequence(u_int8_t key, u_int8_t * sequence){
 }
 
 /*
- *  Function printSequences
+ *  Function inPrevSequence
  *
- *  Prints sequences from @param _sc one by one
- *  Adds entries from @param _delay at given positions
+ *  Checks if @param key is in @param _sc previous sequence
  *
  */
-static void printSequences(Script * _sc, Delay * _dl){
-  // printf("\n%s\n", "All Sequences:");
+static u_int8_t inPrevSequence(Script * _sc, u_int8_t key){
+  if(_sc->quantity <= 1) return 0;
+  for (size_t i = 0; i < 8; i++) {
+    if(key == _sc->sequences[_sc->quantity-1][i]) return 1;
+  }
+  return 0;
+}
+
+/*
+ *  Function isEmpty
+ *
+ *  Checks, if @param seq is empty and @return 1 if so
+ *
+ */
+static u_int8_t isEmpty(u_int8_t * seq){
+  for (size_t i = 0; i < 8; i++) {
+    if(seq[i] != 0) return 0;
+  }
+  return 1;
+}
+
+/*
+ * Function writeSequences
+ *
+ *  Well, writes sequences to @param fp
+ *
+ */
+static u_int8_t writeSequences(Script * _sc, Delay * _dl, FILE * fp){
+  fprintf(fp, "%s\n\n", "#!/bin/bash");
   for (size_t i = 0; i < _sc->quantity; i++) {
-    // printf("\t%s: %d\n\t\t", "Sequence", i);
-    printf("echo -ne \"");
+    fprintf(fp, "%s", "echo -ne \"");
     for (size_t j = 0; j < 8; j++) {
-      printf("\\0x%x", _sc->sequences[i][j]);
+      fprintf(fp, "%s%x", "\\x", _sc->sequences[i][j]);
     }
-    printf("\" > /dev/hidg0 &&");
-    printf("\n");
+    if(isEmpty(_sc->sequences[i]) || _sc->sequences[i][0] != 0) fprintf(fp, "%s\n", "\" > /dev/hidg0");
+    else fprintf(fp, "%s\n", "\" > /dev/hidg0 &&");
     for (size_t k = 0; k < _dl->quantity; k++) {
       if(_dl->entries[k].position == i){
-        printf("%s %lf\n", "sleep", (float)_dl->entries[k].delay / 1000);
+        fprintf(fp, "%s %lf\n", "sleep", (float)_dl->entries[k].delay / 1000);
       }
     }
   }
@@ -372,7 +400,13 @@ static u_int16_t searchDictionary(Dictionary * _dc, char * str){
   for (size_t i = 0; i < _dc->quantity; i++) {
     if(strcmp(str, _dc->entries[i].keyword) == 0) return _dc->entries[i].value;
   }
-  printf("KEY %d NOT FOUND IN DICTIONARY!!!");
+  if(DEBUG) printf("KEY %s NOT FOUND IN DICTIONARY!!!", str);
+}
+
+static void printDictionary(Dictionary * _dc){
+  for (size_t i = 0; i < _dc->quantity; i++) {
+    printf("Keyword: %s, Value: %x\n", _dc->entries[i].keyword, _dc->entries[i].value);
+  }
 }
 
 /*
@@ -398,7 +432,7 @@ static char * charToString(char * value){
 static void insertIntoScript(Script * _sc, u_int8_t ** sequence, u_int8_t * mask){
   // Make space for another entry
   _sc->sequences = realloc(_sc->sequences, sizeof(char *) * _sc->quantity+1);
-  _sc->sequences[_sc->quantity] = malloc(sizeof(char) * 8);
+  _sc->sequences[_sc->quantity] = calloc(8, sizeof(char));
 
   for (size_t i = 0; i < 8; i++){
     _sc->sequences[_sc->quantity][i] = (*sequence)[i];
@@ -446,20 +480,6 @@ static void modifyBit(u_int8_t * mask, u_int8_t p, u_int8_t value){
 }
 
 /*
- *  Function sequenceIsEmpty
- *
- *  Checks if sequence[2] till sequence[8] is equal to 0 or not
- *  @return = returns 1 if sequence is empty
- *
- */
-static u_int8_t sequenceIsEmpty(u_int8_t ** tmp_sequence){
-  for (size_t i = 2; i < 8; i++) {
-    if((*tmp_sequence)[i] == 1) return 0;
-  }
-  return 1;
-}
-
-/*
  *  Function insertIntoSequence
  *
  *  Does various checks and then
@@ -468,6 +488,7 @@ static u_int8_t sequenceIsEmpty(u_int8_t ** tmp_sequence){
  */
 static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, u_int8_t ** tmp_sequence, char * value, u_int8_t length){
   if(DEBUG) printf("\n-------------------------------------------\n");
+  if(DEBUG) printf("%s: %d\n", "Current Sequence count", _sc->quantity);
   char * maskInBin = calloc(9, sizeof(char));
   printIntToBinary(maskInBin, *mask);
 
@@ -493,18 +514,20 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
     if(DEBUG) printf("FULL\n");
   }
 
-  // Checking if the current value is already present in tmp_sequence, if yes send Sequence and insert current value into new one
-  if(keyValue != 0 && inSequence(keyValue, (*tmp_sequence))){
+  // Checking if the current value is already present in tmp_sequence, or in sequence before, if yes send Sequence and insert current value into new one
+  if(keyValue != 0 && (inSequence(keyValue, (*tmp_sequence)) || inPrevSequence(_sc, keyValue))){
+    insertIntoScript(_sc, tmp_sequence, mask);
     insertIntoScript(_sc, tmp_sequence, mask);
     if(DEBUG) printf("Value was already present\n");
   }
   // mask is empty, or modifier is same
   // checking if sequence is empty, then its okay to add another modifier, but if its already filled with a key, then its not okay to add another modifier
-  if((!(*mask == 0b01000000 || modifier == (*tmp_sequence)[0])) ){
+  if(!(*mask == 0b01000000 || modifier == (*tmp_sequence)[0])){
     insertIntoScript(_sc, tmp_sequence, mask);
-    if(DEBUG) printf("MODIFIER WAS NOT 0 so sending");
+    insertIntoScript(_sc, tmp_sequence, mask);
+    if(DEBUG) printf("MODIFIER WAS NOT 0 so sending\n");
   }
-
+  if(keyValue == 0x0a) insertIntoScript(_sc, tmp_sequence, mask);
   /*
    *  Adding two modifiers with bitwise OR '|'
    *
@@ -523,7 +546,8 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   u_int8_t free = nextFreeSpot(maskInBin);
   if(DEBUG) printf("Inserting into: tmp_sequence[%d]\n", free);
 
-  (*tmp_sequence)[free] = keyValue;
+  (*tmp_sequence)[keyValue == 0x0a ? 7 : free] = keyValue;
+  if(keyValue == 0x0a) insertIntoScript(_sc, tmp_sequence, mask);
 
   //Set bit at position @var free to 1
   modifyBit(mask, free, 1);
