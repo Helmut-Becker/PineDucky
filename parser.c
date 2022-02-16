@@ -51,8 +51,11 @@ void evalString(SplitLine * _sl){
 
   for (size_t i = 1; i < _sl->quantity; i++) {
     for (size_t j = 0; j < _sl->length[i]; j++) {
-      insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence, &_sl->slices[i][j], 1);
+      insertIntoSequence(_dictionary, _script, tmp_mask,
+                          tmp_sequence, &_sl->slices[i][j], 1);
     }
+    if(i < _sl->quantity-1) insertIntoSequence(_dictionary, _script, tmp_mask,
+                                                tmp_sequence, " ", 2);
   }
   insertIntoScript(_script, tmp_sequence, tmp_mask); // sending line
 }
@@ -196,7 +199,8 @@ void parseScript(char ** argv){
   // executing outfile
   char *command = malloc(sizeof(char) * (strlen(argv[2])+3));
   sprintf(command, "%s %s", "sh", argv[2]);
-  system(command);
+  //system(command);
+  printDictionary(_dictionary);
 }
 
 
