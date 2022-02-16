@@ -193,7 +193,7 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
   result->quantity = 0;
   result->length = malloc(sizeof(u_int16_t));
   result->slices = malloc(sizeof(char *)*3); // If I change this to 3 = errors häää
-  char * tmp; tmp = malloc(600 * sizeof(char));
+  char * tmp; tmp = malloc(1000 * sizeof(char));
   //
   // result->slices   p--->   char *  p---> char *
   //
@@ -229,7 +229,7 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
       if(DEBUG) printf("%s %d %s%d%s\n", "inserting", j, "into result->length[", result->quantity, "]");
       if(DEBUG) printf("Currently inserted %d\n", result->length[result->quantity]);
       free(tmp);
-      tmp = malloc(600  * sizeof(char));
+      tmp = malloc(1000  * sizeof(char));
       result->quantity += 1;
       if(DEBUG) printf("%s\n", "----------------------------------------------------------");
     }else{
