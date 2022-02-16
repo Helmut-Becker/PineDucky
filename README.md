@@ -20,7 +20,7 @@ make
 
 After you have done the steps in **setup/README.md**, you can do a test run. Please look into **testing/README.md** for further instructions.
 
-**Sources:**
+**Sources:**  
 [Linux USB gadget configured through configfs](https://www.kernel.org/doc/html/latest/usb/gadget_configfs.html)  
 [Configfs - Userspace-driven Kernel Object Configuration](https://www.kernel.org/doc/html/latest/filesystems/configfs.html)  
 [Using RPi Zero as a Keyboard](https://www.rmedgar.com/blog/using-rpi-zero-as-keyboard-setup-and-device-definition/)  
