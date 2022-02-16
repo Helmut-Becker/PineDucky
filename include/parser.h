@@ -200,7 +200,7 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
   //
   u_int16_t offset = 0;
   for(int i = 0; i < len; i++){
-    if(line[i] == delim || i == len-1){
+    if(i != 0 && line[i] == delim || i == len-1){
       result->length = realloc(result->length, result->quantity+1);
       if(DEBUG) printf("result address: %p\n", result);
       if(DEBUG) printf("result->quantity address: %p\n", &result->quantity);
