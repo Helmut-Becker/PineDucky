@@ -197,8 +197,8 @@ void parseScript(char ** argv){
   closeFile(fp, line);
 
   // executing outfile
-  char *command = malloc(sizeof(char) * (strlen(argv[2])+3));
-  sprintf(command, "%s %s", "sh", argv[2]);
+  char *command = malloc(sizeof(char) * (strlen(argv[2])+5));
+  sprintf(command, "%s %s", "bash", argv[2]);
   system(command);
 }
 
