@@ -199,8 +199,7 @@ void parseScript(char ** argv){
   // executing outfile
   char *command = malloc(sizeof(char) * (strlen(argv[2])+3));
   sprintf(command, "%s %s", "sh", argv[2]);
-  //system(command);
-  printDictionary(_dictionary);
+  system(command);
 }
 
 

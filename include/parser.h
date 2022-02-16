@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 typedef enum Type{Key, Modifier, Keyword, Custom}Type;
 
