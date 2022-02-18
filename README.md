@@ -7,7 +7,14 @@ This project aims to convert your Pinephone into a Rubber Ducky (hid gadget).
 This project is not finished, so a couple things are not implemented yet. Todos written in **TODO.md** :)
 
 ### Tested Pinephone OS's
-- Mobian (Linux 5.10-sunxi64 aarch64 GNU/Linux)
+- Mobian (Linux 5.10-sunxi64 aarch64 GNU/Linux) :heavy_check_mark:
+- PostmarketOS :interrobang:
+- DanctNIX (Arch Linux ARM) (Linux 5.16.10-1-danctnix aarch64 GNU/Linux) :heavy_check_mark:
+- Gentoo :interrobang:
+- Fedora :interrobang:
+- Manjaro ARM (Linux 5.16.7-1-MANJARO-ARM aarch64 GNU/Linux) :heavy_check_mark:
+- SkiffOS :heavy_check_mark:
+- Ubuntu Touch :interrobang:
 
 ### Setup
 
@@ -24,7 +31,7 @@ After you have done the steps in **setup/README.md**, you can do a test run. Ple
 [Linux USB gadget configured through configfs](https://www.kernel.org/doc/html/latest/usb/gadget_configfs.html)  
 [Configfs - Userspace-driven Kernel Object Configuration](https://www.kernel.org/doc/html/latest/filesystems/configfs.html)  
 [Using RPi Zero as a Keyboard](https://www.rmedgar.com/blog/using-rpi-zero-as-keyboard-setup-and-device-definition/)  
-[ersal Serial Bus HID Usage Tables](https://d1.amobbs.com/bbs_upload782111/files_47/ourdev_692986N5FAHU.pdf)  
+[universal Serial Bus HID Usage Tables](https://d1.amobbs.com/bbs_upload782111/files_47/ourdev_692986N5FAHU.pdf)  
 [Kernel modules](https://wiki.gentoo.org/wiki/Kernel_Modules)
 [How to blacklist a module on Ubuntu/Debian Linux](https://linuxconfig.org/how-to-blacklist-a-module-on-ubuntu-debian-linux)  
 [Translation to German keyboard layout](https://stackoverflow.com/questions/9777286/sending-the-right-hid-keycode)  
