@@ -192,7 +192,8 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
   result->quantity = 0;
   result->length = malloc(sizeof(u_int16_t));
   result->slices = malloc(sizeof(char *));
-  char * tmp; tmp = malloc(1000 * sizeof(char));
+  u_int16_t tmp_allocated = 10;
+  char * tmp; tmp = malloc(tmp_allocated * sizeof(char));
   //
   // result->slices   p--->   char *  p---> char *
   //
@@ -227,11 +228,15 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
       result->length[result->quantity] = j;
       if(DEBUG) printf("%s %d %s%d%s\n", "inserting", j, "into result->length[", result->quantity, "]");
       if(DEBUG) printf("Currently inserted %d\n", result->length[result->quantity]);
-      free(tmp);
-      tmp = malloc(1000  * sizeof(char));
+      free(tmp); tmp_allocated = 10;
+      tmp = malloc(tmp_allocated * sizeof(char));
       result->quantity += 1;
       if(DEBUG) printf("%s\n", "----------------------------------------------------------");
     }else{
+      if(i-offset > tmp_allocated/2){
+        tmp_allocated += 25;
+        tmp = realloc (tmp, tmp_allocated * sizeof(char));
+      }
       if(DEBUG) printf("| %c |", line[i]);
       if(DEBUG) printf("%s%d%s\n", "tmp[", i-offset, "]");
       tmp[i-offset] = line[i];
