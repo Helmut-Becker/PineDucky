@@ -2,6 +2,9 @@
 
 This project aims to convert your Pinephone into a Rubber Ducky (hid gadget).
 
+Important: This git repository does not belong to and is not administered by PINE64 community nor Pine Store Ltd.  
+(just saving my ... from copyright infringements here) :)
+
 - Required Pinephone kernel >= 3.19
 
 This project is not finished, so a couple things are not implemented yet. Todos written in **TODO.md** :)
