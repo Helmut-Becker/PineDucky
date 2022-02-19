@@ -188,11 +188,10 @@ static void insertIntoDelay(Delay * _delay, u_int16_t position, int time){
 static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
   //number of entries in the first pointer
   SplitLine * result;
-  // printf("%s: %d %s: %d\n", "Sizeof SplitLine", sizeof(SplitLine), "Sizeof Splitline* ", sizeof(SplitLine *));
   result = (SplitLine *)calloc(1, sizeof(struct SplitLine));
   result->quantity = 0;
   result->length = malloc(sizeof(u_int16_t));
-  result->slices = malloc(sizeof(char *)*3); // If I change this to 3 = errors häää
+  result->slices = malloc(sizeof(char *));
   char * tmp; tmp = malloc(1000 * sizeof(char));
   //
   // result->slices   p--->   char *  p---> char *
@@ -202,6 +201,7 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
   for(int i = 0; i < len; i++){
     if(i != 0 && line[i] == delim || i == len-1){
       result->length = realloc(result->length, result->quantity+1);
+      result->slices = realloc(result->slices, (result->quantity+2) * sizeof(char *));
       if(DEBUG) printf("result address: %p\n", result);
       if(DEBUG) printf("result->quantity address: %p\n", &result->quantity);
       if(DEBUG) printf("result->slices address: %p\n", result->slices);
@@ -224,7 +224,6 @@ static SplitLine * splitLine(char * line, u_int16_t len, const char delim){
       if(DEBUG) printf("%s: %d\n", "Done with inserting i",i);
       offset = (u_int16_t)i+1;
       if(DEBUG) printf("%s: %p\n", "Address of result->length[result->quantity]", &result->length[result->quantity]);
-      // result->length[result->quantity] = malloc(sizeof(u_int16_t));
       result->length[result->quantity] = j;
       if(DEBUG) printf("%s %d %s%d%s\n", "inserting", j, "into result->length[", result->quantity, "]");
       if(DEBUG) printf("Currently inserted %d\n", result->length[result->quantity]);
