@@ -183,9 +183,8 @@ void parseScript(char ** argv){
   while ((read = getline(&line, &len, fp)) != -1) {
     SplitLine * sl; sl = splitLine(line, read, ' ');
     evaluateSplitLine(sl);
-
-
   }
+  insertIntoScript(_script, NULL, NULL); // sending line
   // Write a function to send last sequence
 
   closeFile(fp, line);

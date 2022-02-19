@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define DEBUG 0
+#define DEBUG 1
 
 typedef enum Type{Key, Modifier, Keyword, Custom}Type;
 
@@ -424,6 +424,9 @@ static char * charToString(char * value){
 /*
  *  Function insertIntoScript
  *
+ *  Adding functionality to insert nullSequence, when
+ *    @param sequence and @param mask == nullptr
+ *
  *  Inserts @param sequence into @param _sc (COPYING)
  *  Resets @param mask to default
  *  Renews @param sequence
@@ -433,16 +436,15 @@ static void insertIntoScript(Script * _sc, u_int8_t ** sequence, u_int8_t * mask
   // Make space for another entry
   _sc->sequences = realloc(_sc->sequences, sizeof(char *) * _sc->quantity+1);
   _sc->sequences[_sc->quantity] = calloc(8, sizeof(char));
-
   for (size_t i = 0; i < 8; i++){
-    _sc->sequences[_sc->quantity][i] = (*sequence)[i];
+    _sc->sequences[_sc->quantity][i] = (!sequence && !mask) ? 0 : (*sequence)[i];
   }
   _sc->quantity += 1;
 
   // Resetting sequence
-  *sequence = calloc(8, sizeof(u_int8_t));
+  if(sequence) *sequence = calloc(8, sizeof(u_int8_t));
   // Reset mask
-  *mask = 0b01000000;
+  if(mask) *mask = 0b01000000;
 }
 
 /*
