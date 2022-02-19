@@ -145,7 +145,7 @@ void evaluateSplitLine(SplitLine * _sl){
  */
 int setupKeysAndKewords(){
 
-  FILE * fp; fp = openFile("defines/keys", "r");
+  FILE * fp; fp = openFile("defines/keys-de", "r");
   char * line = NULL;
   size_t len = 0;
   ssize_t read;

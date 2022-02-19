@@ -7,22 +7,21 @@
 - **DEFAULT_DELAY** is implemented, it's alias **DEFAULTDELAY** is missing
 - **WINDOWS** or **GUI**
 - **MENU** or **APP**
-- **CTRL** is implemented, it's alias **CONTROL** is missing
-- **ESC**
-- **ARROW KEYS**
-- **BREAK or PAUSE**
-- **CAPSLOCK**
-- **DELETE**
-- **END**
-- **ESC** or **ESCAPE**
-- **HOME**
-- **NUMLOCK**
-- **INSERT**
-- **PAGEUP**
-- **PAGEDOWN**
-- **PRINTSCREEN**
-- **SCROLLOCK**
-- **SPACE**
-- **TAB**
+- **CTRL** is implemented, it's alias **CONTROL** is missing [x]
+- **ARROW KEYS** [x]
+- **BREAK or PAUSE** [x]
+- **CAPSLOCK** [x]
+- **DELETE** [x]
+- **END** [x]
+- **ESC** or **ESCAPE** [x]
+- **HOME** [x]
+- **NUMLOCK** [x]
+- **INSERT** [x]
+- **PAGEUP** [x]
+- **PAGEDOWN** [x]
+- **PRINTSCREEN** [x]
+- **SCROLLOCK** [x]
+- **SPACE** [x]
+- **TAB** [x]
 
 To see whats actually implemented, have a look at the **defines/keys** file.
