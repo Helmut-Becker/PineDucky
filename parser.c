@@ -78,7 +78,8 @@ void evalKeyword(SplitLine * _sl){
       if(DEBUG) printf("%s: %d %s: %d\n", "Insert DELAY", atoi(_sl->slices[1]), "at position", _script->quantity);
       return;
     }
-    if(strcmp(_sl->slices[0], "DEFAULT_DELAY") == 0){
+    if(strcmp(_sl->slices[0], "DEFAULT_DELAY") == 0 ||
+       strcmp(_sl->slices[0], "DEFAULTDELAY") == 0){
       _default_delay = atoi(_sl->slices[1]);
       if(DEBUG) printf("%s: %d", "Set DEFAULT_DELAY to", _default_delay);
       return;
