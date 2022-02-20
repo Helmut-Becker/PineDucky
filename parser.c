@@ -1,6 +1,7 @@
 #include "parser.h"
+#include "hashmap.h"
 
-Dictionary * _dictionary;
+node * _arr [TABLE_SIZE];
 Script * _script;
 Delay * _delay;
 int _default_delay = 0;
@@ -8,16 +9,12 @@ int _default_delay = 0;
 /*
  *  Function allocate
  *
- *  Allocating memory for @global _dictionary
+ *  Allocating memory for @global _arr
  *    and @global _script
  *
  */
 void allocate(){
-  _dictionary = malloc(sizeof(Dictionary));
-  _dictionary->quantity = 0;
-  if(DEBUG) printf("%s\n", "Allocating Memory for Dictionary.");
-  if(DEBUG) printf("\t%s %p\n", "Dictionary address: ", _dictionary);
-  if(DEBUG) printf("\t%s %d\n", "Dictionary->quantity =");
+  initHashTable(_arr);
 
   _script = malloc(sizeof(Script));
   _script->quantity = 0;
@@ -34,56 +31,10 @@ void allocate(){
   if(DEBUG) printf("\t%s %d\n", "Delay->quantity =");
 }
 
-/*
- *  Function evalString
- *
- *  Called if keyword 'STRING' is evalueated in @FILE script
- *  Calling @function insertIntoSequence to insert everyting
- *    in @param _sl into @global _script
- *
- */
-void evalString(SplitLine * _sl){
-
-  u_int8_t ** tmp_sequence; tmp_sequence = malloc(sizeof(u_int8_t *));
-  *tmp_sequence = calloc(8, sizeof(u_int8_t));
-  u_int8_t * tmp_mask; tmp_mask = calloc(1, sizeof(u_int8_t));
-  *tmp_mask = 0b01000000;
-
-  for (size_t i = 1; i < _sl->quantity; i++) {
-    for (size_t j = 0; j < _sl->length[i]; j++) {
-      insertIntoSequence(_dictionary, _script, tmp_mask,
-                          tmp_sequence, &_sl->slices[i][j], 1);
-    }
-    if(i < _sl->quantity-1) insertIntoSequence(_dictionary, _script, tmp_mask,
-                                                tmp_sequence, " ", 2);
-  }
-  insertIntoScript(_script, tmp_sequence, tmp_mask); // sending line
-}
-
-/*
- *  Function evalKeyword
- *
- *  Evaluates Keyword (will later expand this
- *    with 'DELAY' and 'DEFAULT_DELAY')
- *
- */
-void evalKeyword(SplitLine * _sl){
-  for (size_t i = 0; i < _sl->quantity; i++) {
-    if(strcmp(_sl->slices[0], "STRING") == 0){
-      evalString(_sl);
-      return;
-    }
-    if(strcmp(_sl->slices[0], "DELAY") == 0){
-      insertIntoDelay(_delay, _script->quantity, atoi(_sl->slices[1]));
-      if(DEBUG) printf("%s: %d %s: %d\n", "Insert DELAY", atoi(_sl->slices[1]), "at position", _script->quantity);
-      return;
-    }
-    if(strcmp(_sl->slices[0], "DEFAULT_DELAY") == 0 ||
-       strcmp(_sl->slices[0], "DEFAULTDELAY") == 0){
-      _default_delay = atoi(_sl->slices[1]);
-      if(DEBUG) printf("%s: %d", "Set DEFAULT_DELAY to", _default_delay);
-      return;
-    }
+void sendLastLine(Script * _sc, u_int8_t ** tmp_sequence, u_int8_t * mask){
+  insertIntoScript(_sc, tmp_sequence, mask); // sending last line
+  if(_default_delay){
+    insertIntoDelay(_delay, _script->quantity-1, _default_delay);
   }
 }
 
@@ -104,36 +55,38 @@ void evaluateSplitLine(SplitLine * _sl){
 
   if(strcmp(_sl->slices[0], "REM") == 0) return; // Check for comment
   for (int i = 0; i < _sl->quantity; i++){
-    // Key, Modifier, Keyword, Custom
-    for (size_t j = 0; j < _dictionary->quantity; j++) {
-      if (strcmp(_sl->slices[i], _dictionary->entries[j].keyword) == 0){
-        if(_dictionary->entries[j].type == Key){
-          insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence,
-                            _dictionary->entries[j].keyword,
-                            _dictionary->entries[j].keyword_length);
-          if(DEBUG) printf("FOUND KEY: %s\n", _dictionary->entries[j].keyword);
+
+    Entry * _tmp = searchHashmap(_arr, _sl->slices[i]) != NULL ?
+                   searchHashmap(_arr, _sl->slices[i])->entry : NULL;
+
+    if(_tmp != NULL && _tmp->type == Keyword){
+      if(strcmp(_tmp->keyword, "DELAY") == 0)
+      insertIntoDelay(_delay, _script->quantity, atoi(_sl->slices[1]));
+
+      if(strcmp(_sl->slices[0], "DEFAULT_DELAY") == 0 ||
+      strcmp(_sl->slices[0], "DEFAULTDELAY") == 0)
+        _default_delay = atoi(_sl->slices[1]);
+
+      if(strcmp(_sl->slices[0], "STRING") == 0){
+        for (size_t k = 1; k < _sl->quantity; k++) {
+          char * c; c = malloc(2); c[1] = '\0';
+          for (size_t j = 0; j < strnlen(_sl->slices[k], MAX_KEYWORD_LENGTH); j++) {
+            c[0] = _sl->slices[k][j];
+            insertIntoSequence(_script, tmp_mask, tmp_sequence,
+                                      searchHashmap(_arr, c)->entry->value);
+          } if(k < _sl->quantity-1) insertIntoSequence(_script, tmp_mask, tmp_sequence, 0x2c00);
         }
-        if(_dictionary->entries[j].type == Modifier){
-          insertIntoSequence(_dictionary, _script, tmp_mask, tmp_sequence,
-                            _dictionary->entries[j].keyword,
-                            _dictionary->entries[j].keyword_length);
-          if(DEBUG) printf("FOUND MODIFIER: %s\n", _dictionary->entries[j].keyword);
-          continue;
-        }
-        if(_dictionary->entries[j].type == Keyword){
-          evalKeyword(_sl);
-          if(DEBUG) printf("FOUND KEYWORD: %s\n", _dictionary->entries[j].keyword);
-          continue;
-        }
-        if(_dictionary->entries[j].type == Custom) printf("FOUND CUSTOM\n");
       }
+      sendLastLine(_script, tmp_sequence, tmp_mask);
+      return;
+    }
+
+    if(_tmp != NULL && (_tmp->type == Key || _tmp->type == Modifier)){
+      insertIntoSequence(_script, tmp_mask, tmp_sequence,
+                        _tmp->value);
     }
   }
-  insertIntoScript(_script, tmp_sequence, tmp_mask); // sending line
-  // Check default delay
-  if(_default_delay){
-    insertIntoDelay(_delay, _script->quantity-1, _default_delay);
-  }
+  sendLastLine(_script, tmp_sequence, tmp_mask);
 }
 
 /*
@@ -162,7 +115,10 @@ int setupKeysAndKewords(){
       else if(strcmp(_sl->slices[1], "KEYWORDS") == 0) pos = 2;
       else if(strcmp(_sl->slices[1], "CUSTOM") == 0) pos = 3;
     }else{
-      insertIntoDictionary(_dictionary, _sl->length[0], _sl->slices[0], _sl->slices[1], pos);
+      Entry * _tmp_entry = setupEntry(_tmp_entry, _sl->slices[0],
+                                      _sl->slices[1], pos);
+
+      insertIntoHashmap(_arr, _tmp_entry);
       if (_sl) freeSplitLine(_sl);
     }
   }
@@ -173,9 +129,10 @@ int setupKeysAndKewords(){
 void parseScript(char ** argv){
   allocate();
   if(setupKeysAndKewords()){
-    printf("%s\n", "Something went wront while populating the dictionary, exiting...");
+    printf("%s\n", "Something went wrong while populating the hashmap, exiting...");
     exit(EXIT_FAILURE);
   }
+  printTable(_arr);
   FILE * fp = openFile(argv[1], "r");
   char * line = NULL;
   size_t len = 0;
@@ -185,6 +142,7 @@ void parseScript(char ** argv){
     SplitLine * sl; sl = splitLine(line, read, ' ');
     evaluateSplitLine(sl);
   }
+
   insertIntoScript(_script, NULL, NULL); // sending line
   // Write a function to send last sequence
 
@@ -199,7 +157,8 @@ void parseScript(char ** argv){
   // executing outfile
   char *command = malloc(sizeof(char) * (strlen(argv[2])+5));
   sprintf(command, "%s %s", "bash", argv[2]);
-  system(command);
+  //system(command);
+
 }
 
 

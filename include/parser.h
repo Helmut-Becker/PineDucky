@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
+#define MAX_KEYWORD_LENGTH 20
 #define DEBUG 1
 
 typedef enum Type{Key, Modifier, Keyword, Custom}Type;
@@ -23,24 +24,9 @@ typedef enum Type{Key, Modifier, Keyword, Custom}Type;
 */
 typedef struct Entry{
   Type type;
-  u_int8_t keyword_length;
   char * keyword;
   u_int16_t value;
 }Entry;
-
-/*
- *  Struct Dictionary
- *
- *  Holds a number of @struct Entry
- *
- *  @var quantity = Holds the number of entries in @var entries
- *  @var entries = Holds pointers to @struct Entry
- *
- */
-typedef struct Dictionary{
-  u_int16_t quantity;
-  Entry * entries;
-}Dictionary;
 
 /*
 *  Struct Script
@@ -97,6 +83,21 @@ typedef struct Delay{
 }Delay;
 
 /*
+ *  Function setupEntry
+ *
+ *  Helperfunction to alocate and fill @param dest Entry pointer
+ *
+ */
+static Entry * setupEntry(Entry * dest, char * keyword, char * value, u_int8_t type){
+  dest = malloc(sizeof(Entry *));
+  dest->keyword = malloc(sizeof(char) * strnlen(keyword, MAX_KEYWORD_LENGTH));
+  dest->keyword = strcpy(dest->keyword, keyword);
+  dest->value = (u_int16_t) strtol(value, NULL, 16);;
+  dest->type = type;
+  return dest;
+}
+
+/*
  *  Function printSplitLine
  *
  *  Prints all contents of split line onto STDOUT
@@ -112,46 +113,6 @@ static void printSplitLine(SplitLine * sl){
     }
     printf("\n%s\n", "-----------------------------");
   }
-}
-
-/*
- *  Function insertIntoDictionary
- *
- *  Creates and inserts a new Entry at the end of @param _dictionary
- *
- *  @param _dictionary = Pointer to Dictionary into which shall be inserted
- *  @param keyword_length = Length of @param keyword
- *  @param value = Char array in wich the hex value of keystroke is stored
- *  @param type = Enum Type to identify Entry
- *
- */
-static void insertIntoDictionary(Dictionary * _dictionary,
-                                  u_int8_t keyword_length,
-                                  char * keyword,
-                                  char * value,
-                                  Type type
-                                )
-{
-  // Make space for another entry
-  // REMOVE THIS CAST TO ENTRY *
-  if(DEBUG) printf("%s\n", "Allocating memory for new entry");
-  _dictionary->entries = (Entry *)realloc(_dictionary->entries, sizeof(Entry) * (_dictionary->quantity+1));
-  if(DEBUG) printf("\t%s: %d\n", "Keyword_length", keyword_length);
-  _dictionary->entries[_dictionary->quantity].keyword = malloc(keyword_length+1); // +1 for the '\0'
-  _dictionary->entries[_dictionary->quantity].keyword_length = keyword_length;
-  strcpy(_dictionary->entries[_dictionary->quantity].keyword, keyword);
-  _dictionary->entries[_dictionary->quantity].value = (u_int16_t) strtol(value, NULL, 16);
-  _dictionary->entries[_dictionary->quantity].type = type;
-  if(DEBUG) printf("\t%s: %p\n", "Adress of Entry", &_dictionary->entries[_dictionary->quantity]);
-  if(DEBUG) printf("\t%s: %p\n", "Adress of Entry.keyword", _dictionary->entries[_dictionary->quantity].keyword);
-  if(DEBUG) printf("\t%s: %d\n", "Allocated Bytes", keyword_length+1);
-  if(DEBUG) printf("\t%s: %d\n", "Entry.type", _dictionary->entries[_dictionary->quantity].type);
-  if(DEBUG) printf("\t%s: %d\n", "Entry.keyword_length", _dictionary->entries[_dictionary->quantity].keyword_length);
-  if(DEBUG) printf("\t%s: %s\n", "Keyword", _dictionary->entries[_dictionary->quantity].keyword);
-  if(DEBUG) printf("\t%s: %x\n", "Value", _dictionary->entries[_dictionary->quantity].value);
-  _dictionary->quantity += 1;
-  if(DEBUG) printf("\t%s: %d\n", "Dictionary->quantity", _dictionary->quantity);
-  if(DEBUG) printf("%s\n\n", "Done");
 }
 
 /*
@@ -394,38 +355,6 @@ static u_int8_t writeSequences(Script * _sc, Delay * _dl, FILE * fp){
 }
 
 /*
- *  Function searchDictionary
- *
- *  Searches @param _dc if @param str is present
- *  @return corrispondig ByteValue if found
- *
- */
-static u_int16_t searchDictionary(Dictionary * _dc, char * str){
-  for (size_t i = 0; i < _dc->quantity; i++) {
-    if(strcmp(str, _dc->entries[i].keyword) == 0) return _dc->entries[i].value;
-  }
-  if(DEBUG) printf("KEY %s NOT FOUND IN DICTIONARY!!!", str);
-}
-
-static void printDictionary(Dictionary * _dc){
-  for (size_t i = 0; i < _dc->quantity; i++) {
-    printf("Keyword: %s, Value: %x\n", _dc->entries[i].keyword, _dc->entries[i].value);
-  }
-}
-
-/*
- *  Function charToString
- *
- *  Adds '\0' to @param and @return @param as string
- *
- */
-static char * charToString(char * value){
-  char * p; p = calloc(2, sizeof(char));
-  p[0] = value[0]; p[1] = '\0';
-  return p;
-}
-
-/*
  *  Function insertIntoScript
  *
  *  Adding functionality to insert nullSequence, when
@@ -492,7 +421,7 @@ static void modifyBit(u_int8_t * mask, u_int8_t p, u_int8_t value){
  *    inserts @var keyValue into @param tmp_sequence
  *
  */
-static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, u_int8_t ** tmp_sequence, char * value, u_int8_t length){
+static void insertIntoSequence(Script * _sc, u_int8_t * mask, u_int8_t ** tmp_sequence, u_int16_t seq){
   if(DEBUG) printf("\n-------------------------------------------\n");
   if(DEBUG) printf("%s: %d\n", "Current Sequence count", _sc->quantity);
   char * maskInBin = calloc(9, sizeof(char));
@@ -504,11 +433,7 @@ static void insertIntoSequence(Dictionary * _dc, Script * _sc, u_int8_t * mask, 
   for (size_t i = 0; i < 8; i++) {
     if(DEBUG) printf("%x ", (*tmp_sequence)[i]);
   }
-  if(length < 2 && DEBUG) printf("\nValue:\n\t%c\n\n", *value);
-  else if (DEBUG) printf("\nValue:\n\t%s\n\n", value);
-  // Make conditional statement here, searchDictionary(isString == 1 ? value : charToString(value));
-  // Search corrispondig bytesequence for value in dictionary
-  u_int16_t seq = searchDictionary(_dc, (length < 2) ? charToString(value) : value);
+
   u_int8_t modifier = seq & 0x00FF;
   u_int8_t keyValue = seq >> 8;
   if(DEBUG) printf("Key value is: %x\n", keyValue);
